@@ -1,27 +1,28 @@
 "use client";
 
-import React, { useState, Suspense } from "react";
+import React, { useState } from "react";
 import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { Stethoscope, Lock, CheckCircle2, ArrowRight } from "lucide-react";
+import { useAuth } from "@/providers/authProvider";
+import { Stethoscope, Lock, CheckCircle2, ArrowRight, ShieldAlert } from "lucide-react";
 
-const resetSchema = z.object({
-  password: z.string().min(6, "Password must be at least 6 characters"),
+const changeSchema = z.object({
+  currentPassword: z.string().min(1, "Current password is required"),
+  newPassword: z.string().min(6, "New password must be at least 6 characters"),
   confirmPassword: z.string().min(6, "Confirm password must match")
-}).refine((data) => data.password === data.confirmPassword, {
-  message: "Passwords must match",
+}).refine((data) => data.newPassword === data.confirmPassword, {
+  message: "New passwords must match",
   path: ["confirmPassword"]
 });
 
-type ResetFormData = z.infer<typeof resetSchema>;
+type ChangeFormData = z.infer<typeof changeSchema>;
 
-function ResetPasswordContent() {
+export default function ChangePasswordPage() {
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const email = searchParams.get("email") || "your email";
+  const { changePassword, needsPasswordChange } = useAuth();
   
   const [success, setSuccess] = useState(false);
 
@@ -29,13 +30,14 @@ function ResetPasswordContent() {
     register,
     handleSubmit,
     formState: { errors, isSubmitting }
-  } = useForm<ResetFormData>({
-    resolver: zodResolver(resetSchema)
+  } = useForm<ChangeFormData>({
+    resolver: zodResolver(changeSchema)
   });
 
-  const onSubmit = async (data: ResetFormData) => {
-    console.log("Reset Password Submission Payload:", { email, password: data.password });
+  const onSubmit = async (data: ChangeFormData) => {
+    // Simulate API delay
     await new Promise(resolve => setTimeout(resolve, 1500));
+    changePassword(data.currentPassword, data.newPassword);
     setSuccess(true);
   };
 
@@ -54,11 +56,20 @@ function ResetPasswordContent() {
             </span>
           </Link>
           <h2 className="text-2xl font-extrabold text-slate-900 dark:text-white">
-            Set new password
+            Change your password
           </h2>
-          <p className="mt-1.5 text-xs text-slate-400">
-            Define a secure password for profile <span className="font-semibold">{email}</span>.
-          </p>
+          {needsPasswordChange ? (
+            <div className="mt-3 bg-amber-50 dark:bg-amber-950/30 border border-amber-100 dark:border-amber-900 rounded-xl p-3 flex gap-2 items-start text-left text-xs text-amber-600 dark:text-amber-400 font-medium leading-relaxed">
+              <ShieldAlert className="h-4.5 w-4.5 text-amber-500 flex-shrink-0 mt-0.5" />
+              <span>
+                <strong>First-Time Login Security:</strong> Please change your temporary credentials before proceeding to your dashboard.
+              </span>
+            </div>
+          ) : (
+            <p className="mt-1.5 text-xs text-slate-400">
+              Update password credentials for your security.
+            </p>
+          )}
         </div>
 
         {success ? (
@@ -69,14 +80,14 @@ function ResetPasswordContent() {
             <div className="space-y-1.5">
               <h3 className="text-base font-bold text-slate-900 dark:text-white">Password Updated!</h3>
               <p className="text-xs text-slate-500 max-w-xs mx-auto leading-relaxed">
-                Your credentials have been successfully updated in memory. Use your new password to sign in.
+                Your account password has been successfully updated in memory.
               </p>
             </div>
             <Link
-              href="/login"
+              href="/dashboard"
               className="w-full bg-primary hover:bg-primary/95 text-white py-3 rounded-xl text-xs font-bold shadow-md shadow-primary/10 transition-colors flex items-center justify-center gap-2"
             >
-              Sign In Now
+              Go to Dashboard
               <ArrowRight className="h-4 w-4" />
             </Link>
           </div>
@@ -84,9 +95,29 @@ function ResetPasswordContent() {
           /* Credentials Form */
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
             
+            {/* Current Password */}
+            <div className="space-y-2">
+              <label className="block text-xs font-bold text-slate-455 dark:text-slate-500 uppercase tracking-wider">
+                Current Password
+              </label>
+              <div className="relative">
+                <Lock className="absolute left-3.5 top-3.5 h-4.5 w-4.5 text-slate-400" />
+                <input
+                  type="password"
+                  required
+                  {...register("currentPassword")}
+                  placeholder="••••••••"
+                  className="w-full pl-11 pr-4 py-3 bg-slate-50 dark:bg-slate-800 dark:text-white rounded-xl border border-slate-200 dark:border-slate-700 text-sm focus:outline-hidden focus:border-primary transition-colors"
+                />
+              </div>
+              {errors.currentPassword && (
+                <p className="text-[11px] text-destructive font-medium">{errors.currentPassword.message}</p>
+              )}
+            </div>
+
             {/* New Password */}
             <div className="space-y-2">
-              <label className="block text-xs font-bold text-slate-450 dark:text-slate-500 uppercase tracking-wider">
+              <label className="block text-xs font-bold text-slate-455 dark:text-slate-500 uppercase tracking-wider">
                 New Password
               </label>
               <div className="relative">
@@ -94,20 +125,20 @@ function ResetPasswordContent() {
                 <input
                   type="password"
                   required
-                  {...register("password")}
+                  {...register("newPassword")}
                   placeholder="••••••••"
                   className="w-full pl-11 pr-4 py-3 bg-slate-50 dark:bg-slate-800 dark:text-white rounded-xl border border-slate-200 dark:border-slate-700 text-sm focus:outline-hidden focus:border-primary transition-colors"
                 />
               </div>
-              {errors.password && (
-                <p className="text-[11px] text-destructive font-medium">{errors.password.message}</p>
+              {errors.newPassword && (
+                <p className="text-[11px] text-destructive font-medium">{errors.newPassword.message}</p>
               )}
             </div>
 
             {/* Confirm Password */}
             <div className="space-y-2">
-              <label className="block text-xs font-bold text-slate-450 dark:text-slate-500 uppercase tracking-wider">
-                Confirm Password
+              <label className="block text-xs font-bold text-slate-455 dark:text-slate-500 uppercase tracking-wider">
+                Confirm New Password
               </label>
               <div className="relative">
                 <Lock className="absolute left-3.5 top-3.5 h-4.5 w-4.5 text-slate-400" />
@@ -137,7 +168,7 @@ function ResetPasswordContent() {
                 </>
               ) : (
                 <>
-                  Update Password
+                  Change Password
                   <ArrowRight className="h-4 w-4" />
                 </>
               )}
@@ -147,17 +178,5 @@ function ResetPasswordContent() {
 
       </div>
     </div>
-  );
-}
-
-export default function ResetPasswordPage() {
-  return (
-    <Suspense fallback={
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
-        <div className="h-8 w-8 border-4 border-primary/20 border-t-primary rounded-full animate-spin" />
-      </div>
-    }>
-      <ResetPasswordContent />
-    </Suspense>
   );
 }
