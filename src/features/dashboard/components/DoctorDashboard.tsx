@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import { toast } from "sonner";
 import { 
   Appointment, 
   Doctor, 
@@ -351,7 +352,7 @@ export function DoctorDashboard({
                     <td className="py-4 px-4 text-right">
                       <a
                         href="#"
-                        onClick={(e) => { e.preventDefault(); alert("Simulating PDF download..."); }}
+                        onClick={(e) => { e.preventDefault(); toast.info("Simulating PDF download..."); }}
                         className="text-primary hover:underline font-bold"
                       >
                         Download

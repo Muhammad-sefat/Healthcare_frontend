@@ -2,6 +2,8 @@
 
 import React, { useState, useMemo } from "react";
 import Link from "next/link";
+import { toast } from "sonner";
+import { DatePicker } from "@/components/ui/date-picker";
 import { 
   Appointment, 
   Patient, 
@@ -760,7 +762,7 @@ export function PatientDashboard({
                     <td className="py-4 px-4 text-right">
                       <a
                         href="#"
-                        onClick={(e) => { e.preventDefault(); alert("Simulating prescription PDF download..."); }}
+                        onClick={(e) => { e.preventDefault(); toast.info("Simulating prescription PDF download..."); }}
                         className="inline-flex items-center gap-1.5 text-primary hover:underline font-bold"
                       >
                         <FileSpreadsheet className="h-4 w-4" />
@@ -859,11 +861,9 @@ export function PatientDashboard({
 
               <div className="space-y-1">
                 <label className="block text-[9px] font-bold text-slate-400 uppercase">Date of Birth</label>
-                <input
-                  type="date"
+                <DatePicker
                   value={patDob}
-                  onChange={(e) => setPatDob(e.target.value)}
-                  className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 dark:text-white rounded-xl border border-slate-200 dark:border-slate-700 text-xs"
+                  onChange={setPatDob}
                 />
               </div>
 

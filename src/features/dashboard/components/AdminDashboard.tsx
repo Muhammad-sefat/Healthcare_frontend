@@ -3,6 +3,8 @@
 import React, { useState } from "react";
 import { useAuth } from "@/providers/authProvider";
 import { CustomModal } from "@/components/ui/custom-modal";
+import { DatePicker } from "@/components/ui/date-picker";
+import { toast } from "sonner";
 import { 
   AppointmentStatus, 
   PaymentStatus, 
@@ -79,7 +81,7 @@ export function AdminDashboard({ activeTab }: AdminDashboardProps) {
   const handleGenerateSlotsSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     generateSchedules(genStartD, genEndD, genStartT, genEndT);
-    alert("System schedules generated dynamically.");
+    toast.success("System schedules generated dynamically.");
   };
 
   const handleRegisterDoctorSubmit = (e: React.FormEvent) => {
@@ -333,20 +335,16 @@ export function AdminDashboard({ activeTab }: AdminDashboardProps) {
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1">
                 <label className="block text-[9px] font-bold text-slate-400 uppercase">Start Date</label>
-                <input
-                  type="date"
+                <DatePicker
                   value={genStartD}
-                  onChange={(e) => setGenStartD(e.target.value)}
-                  className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 dark:text-white rounded-xl border border-slate-200 dark:border-slate-705"
+                  onChange={setGenStartD}
                 />
               </div>
               <div className="space-y-1">
                 <label className="block text-[9px] font-bold text-slate-400 uppercase">End Date</label>
-                <input
-                  type="date"
+                <DatePicker
                   value={genEndD}
-                  onChange={(e) => setGenEndD(e.target.value)}
-                  className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 dark:text-white rounded-xl border border-slate-200 dark:border-slate-705"
+                  onChange={setGenEndD}
                 />
               </div>
             </div>

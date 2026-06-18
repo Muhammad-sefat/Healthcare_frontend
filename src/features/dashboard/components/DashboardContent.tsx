@@ -4,6 +4,8 @@ import React, { useState, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 import { useAuth } from "@/providers/authProvider";
 import { CustomModal } from "@/components/ui/custom-modal";
+import { toast } from "sonner";
+import { DatePicker } from "@/components/ui/date-picker";
 import { 
   Role, 
   Gender, 
@@ -161,7 +163,7 @@ export function DashboardContent() {
         maritalStatus: patMarital
       }
     );
-    alert("Health profile updated successfully in memory.");
+    toast.success("Health profile updated successfully in memory.");
   };
 
   const handleReportUploadSubmit = (e: React.FormEvent) => {
@@ -385,12 +387,9 @@ export function DashboardContent() {
           </div>
           <div className="space-y-1">
             <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Follow-Up Date</label>
-            <input
-              type="date"
-              required
+            <DatePicker
               value={prescriptionFollowUp}
-              onChange={(e) => setPrescriptionFollowUp(e.target.value)}
-              className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800 dark:text-white border border-slate-200 dark:border-slate-705 rounded-xl text-xs"
+              onChange={setPrescriptionFollowUp}
             />
           </div>
 
@@ -463,7 +462,7 @@ export function DashboardContent() {
                         <FileText className="h-4 w-4 text-slate-400 flex-shrink-0" />
                         <span className="font-bold text-slate-700 dark:text-slate-350 truncate">{rep.reportName}</span>
                       </div>
-                      <a href="#" onClick={(e) => { e.preventDefault(); alert("Simulating report review..."); }} className="text-primary hover:underline font-bold flex-shrink-0">Review</a>
+                      <a href="#" onClick={(e) => { e.preventDefault(); toast.info("Simulating report review..."); }} className="text-primary hover:underline font-bold flex-shrink-0">Review</a>
                     </div>
                   ))}
                 </div>
@@ -571,11 +570,9 @@ export function DashboardContent() {
                     </div>
                     <div className="space-y-1">
                       <label className="block text-[9px] font-bold text-slate-455 uppercase">Follow-Up Date</label>
-                      <input
-                        type="date"
+                      <DatePicker
                         value={prescriptionFollowUp}
-                        onChange={(e) => setPrescriptionFollowUp(e.target.value)}
-                        className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 dark:text-white rounded-xl border border-slate-200 dark:border-slate-700 text-xs"
+                        onChange={setPrescriptionFollowUp}
                       />
                     </div>
                   </div>
@@ -593,13 +590,13 @@ export function DashboardContent() {
                   type="button"
                   onClick={() => {
                     if (!prescriptionInstructions) {
-                      alert("Please type clinical instructions before finalizing prescription.");
+                      toast.error("Please type clinical instructions before finalizing prescription.");
                       return;
                     }
                     writePrescription(videoCallAppt.id, prescriptionInstructions, prescriptionFollowUp || "2026-06-30");
                     setVideoCallModalOpen(false);
                     setVideoCallAppt(null);
-                    alert("Prescription submitted. Consultation finished.");
+                    toast.success("Prescription submitted. Consultation finished.");
                   }}
                   className="mt-4 w-full bg-emerald-500 hover:bg-emerald-600 text-white py-2.5 rounded-xl font-bold shadow-md cursor-pointer text-xs"
                 >

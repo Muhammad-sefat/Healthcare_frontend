@@ -15,7 +15,17 @@ import {
   Filter,
   ChevronDown
 } from "lucide-react";
-
+import { 
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+} from "@/components/ui/dropdown-menu";
+import {
+  Popover,
+  PopoverTrigger,
+  PopoverContent,
+} from "@/components/ui/popover";
 export function DoctorsListView() {
   const { doctors, specialties } = useAuth();
   const searchParams = useSearchParams();
@@ -26,10 +36,6 @@ export function DoctorsListView() {
   const [maxFee, setMaxFee] = useState<number>(2000);
   const [sortBy, setSortBy] = useState<string>("rating"); // "rating" | "experience" | "fee_low" | "fee_high"
 
-  // Dropdown States
-  const [specialtyOpen, setSpecialtyOpen] = useState(false);
-  const [feeOpen, setFeeOpen] = useState(false);
-  const [sortOpen, setSortOpen] = useState(false);
 
   // Load URL query parameters if present
   useEffect(() => {
@@ -103,152 +109,109 @@ export function DoctorsListView() {
               {/* Dropdown Filters */}
               <div className="flex flex-wrap items-center gap-3 w-full md:w-auto">
                 {/* Specialty Dropdown */}
-                <div className="relative">
-                  <button
-                    onClick={() => {
-                      setSpecialtyOpen(!specialtyOpen);
-                      setFeeOpen(false);
-                      setSortOpen(false);
-                    }}
-                    className="flex items-center justify-between gap-2 px-4 py-3 bg-slate-50 hover:bg-slate-100 dark:bg-slate-800 dark:hover:bg-slate-750 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-semibold text-slate-700 dark:text-slate-200 cursor-pointer w-full md:w-44"
-                  >
-                    <span className="truncate">
-                      {selectedSpecialty 
-                        ? specialties.find(s => s.id === selectedSpecialty)?.title 
-                        : "All Specialties"}
-                    </span>
-                    <ChevronDown className="h-3.5 w-3.5 text-slate-400 flex-shrink-0" />
-                  </button>
-
-                  {specialtyOpen && (
-                    <>
-                      <div className="fixed inset-0 z-40" onClick={() => setSpecialtyOpen(false)} />
-                      <div className="absolute right-0 md:left-0 mt-2 w-56 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-xl py-2 z-50 text-xs animate-in fade-in slide-in-from-top-1 duration-150">
-                        <button
-                          onClick={() => {
-                            setSelectedSpecialty("");
-                            setSpecialtyOpen(false);
-                          }}
-                          className={`w-full text-left px-4 py-2.5 hover:bg-slate-50 dark:hover:bg-slate-700 font-semibold cursor-pointer ${
-                            !selectedSpecialty ? "text-primary bg-primary/5" : "text-slate-755 dark:text-slate-350"
-                          }`}
-                        >
-                          All Specialties
-                        </button>
-                        {specialties.map((spec) => (
-                          <button
-                            key={spec.id}
-                            onClick={() => {
-                              setSelectedSpecialty(spec.id);
-                              setSpecialtyOpen(false);
-                            }}
-                            className={`w-full text-left px-4 py-2.5 hover:bg-slate-50 dark:hover:bg-slate-700 font-semibold cursor-pointer ${
-                              selectedSpecialty === spec.id ? "text-primary bg-primary/5" : "text-slate-755 dark:text-slate-350"
-                            }`}
-                          >
-                            {spec.title}
-                          </button>
-                        ))}
-                      </div>
-                    </>
-                  )}
-                </div>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <button
+                      className="flex items-center justify-between gap-2 px-4 py-3 bg-slate-50 hover:bg-slate-100 dark:bg-slate-800 dark:hover:bg-slate-750 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-semibold text-slate-700 dark:text-slate-200 cursor-pointer w-full md:w-44 focus:outline-hidden"
+                    >
+                      <span className="truncate">
+                        {selectedSpecialty 
+                          ? specialties.find(s => s.id === selectedSpecialty)?.title 
+                          : "All Specialties"}
+                      </span>
+                      <ChevronDown className="h-3.5 w-3.5 text-slate-400 flex-shrink-0" />
+                    </button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent className="w-56 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-xl py-2 z-50 text-xs mt-2" align="start">
+                    <DropdownMenuItem
+                      onClick={() => setSelectedSpecialty("")}
+                      className={`w-full text-left px-4 py-2.5 hover:bg-slate-50 dark:hover:bg-slate-705 font-semibold cursor-pointer rounded-lg ${
+                        !selectedSpecialty ? "text-primary bg-primary/5 font-bold" : "text-slate-700 dark:text-slate-300"
+                      }`}
+                    >
+                      All Specialties
+                    </DropdownMenuItem>
+                    {specialties.map((spec) => (
+                      <DropdownMenuItem
+                        key={spec.id}
+                        onClick={() => setSelectedSpecialty(spec.id)}
+                        className={`w-full text-left px-4 py-2.5 hover:bg-slate-50 dark:hover:bg-slate-705 font-semibold cursor-pointer rounded-lg ${
+                          selectedSpecialty === spec.id ? "text-primary bg-primary/5 font-bold" : "text-slate-700 dark:text-slate-300"
+                        }`}
+                      >
+                        {spec.title}
+                      </DropdownMenuItem>
+                    ))}
+                  </DropdownMenuContent>
+                </DropdownMenu>
 
                 {/* Price Limit Dropdown */}
-                <div className="relative">
-                  <button
-                    onClick={() => {
-                      setFeeOpen(!feeOpen);
-                      setSpecialtyOpen(false);
-                      setSortOpen(false);
-                    }}
-                    className="flex items-center justify-between gap-2 px-4 py-3 bg-slate-50 hover:bg-slate-100 dark:bg-slate-800 dark:hover:bg-slate-755 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-semibold text-slate-700 dark:text-slate-200 cursor-pointer w-full md:w-36"
-                  >
-                    <span>Fee: ৳{maxFee}</span>
-                    <ChevronDown className="h-3.5 w-3.5 text-slate-400 flex-shrink-0" />
-                  </button>
-
-                  {feeOpen && (
-                    <>
-                      <div className="fixed inset-0 z-45" onClick={() => setFeeOpen(false)} />
-                      <div className="absolute right-0 mt-2 w-64 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-xl p-4 z-50 text-xs animate-in fade-in slide-in-from-top-1 duration-150 space-y-3">
-                        <div className="flex justify-between font-bold text-slate-700 dark:text-slate-300">
-                          <span>Max Consult Fee</span>
-                          <span className="text-primary font-extrabold">৳{maxFee}</span>
-                        </div>
-                        <input
-                          type="range"
-                          min="500"
-                          max="3000"
-                          step="100"
-                          value={maxFee}
-                          onChange={(e) => setMaxFee(Number(e.target.value))}
-                          className="w-full accent-primary cursor-pointer"
-                        />
-                        <div className="flex justify-between text-[9px] text-slate-400">
-                          <span>৳500</span>
-                          <span>৳3,000</span>
-                        </div>
-                        <div className="flex justify-end pt-2 border-t border-slate-100 dark:border-slate-700">
-                          <button
-                            type="button"
-                            onClick={() => setFeeOpen(false)}
-                            className="bg-primary hover:bg-primary/90 text-white px-3 py-1.5 rounded-lg font-bold text-[10px] cursor-pointer"
-                          >
-                            Apply
-                          </button>
-                        </div>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <button
+                      className="flex items-center justify-between gap-2 px-4 py-3 bg-slate-50 hover:bg-slate-100 dark:bg-slate-800 dark:hover:bg-slate-755 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-semibold text-slate-700 dark:text-slate-200 cursor-pointer w-full md:w-36 focus:outline-hidden"
+                    >
+                      <span>Fee: ৳{maxFee}</span>
+                      <ChevronDown className="h-3.5 w-3.5 text-slate-400 flex-shrink-0" />
+                    </button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-64 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-xl p-4 z-50 text-xs mt-2" align="start">
+                    <div className="space-y-3">
+                      <div className="flex justify-between font-bold text-slate-700 dark:text-slate-300">
+                        <span>Max Consult Fee</span>
+                        <span className="text-primary font-extrabold">৳{maxFee}</span>
                       </div>
-                    </>
-                  )}
-                </div>
+                      <input
+                        type="range"
+                        min="500"
+                        max="3000"
+                        step="100"
+                        value={maxFee}
+                        onChange={(e) => setMaxFee(Number(e.target.value))}
+                        className="w-full accent-primary cursor-pointer"
+                      />
+                      <div className="flex justify-between text-[9px] text-slate-400">
+                        <span>৳500</span>
+                        <span>৳3,000</span>
+                      </div>
+                    </div>
+                  </PopoverContent>
+                </Popover>
 
                 {/* Sort Order Dropdown */}
-                <div className="relative">
-                  <button
-                    onClick={() => {
-                      setSortOpen(!sortOpen);
-                      setSpecialtyOpen(false);
-                      setFeeOpen(false);
-                    }}
-                    className="flex items-center justify-between gap-2 px-4 py-3 bg-slate-50 hover:bg-slate-100 dark:bg-slate-800 dark:hover:bg-slate-755 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-semibold text-slate-700 dark:text-slate-200 cursor-pointer w-full md:w-40"
-                  >
-                    <span>
-                      {sortBy === "rating" && "Top Rated"}
-                      {sortBy === "experience" && "Experience"}
-                      {sortBy === "fee_low" && "Price: Low to High"}
-                      {sortBy === "fee_high" && "Price: High to Low"}
-                    </span>
-                    <ChevronDown className="h-3.5 w-3.5 text-slate-400 flex-shrink-0" />
-                  </button>
-
-                  {sortOpen && (
-                    <>
-                      <div className="fixed inset-0 z-40" onClick={() => setSortOpen(false)} />
-                      <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-xl py-2 z-50 text-xs animate-in fade-in slide-in-from-top-1 duration-150">
-                        {[
-                          { id: "rating", label: "Top Rated" },
-                          { id: "experience", label: "Years of Experience" },
-                          { id: "fee_low", label: "Price: Low to High" },
-                          { id: "fee_high", label: "Price: High to Low" }
-                        ].map((opt) => (
-                          <button
-                            key={opt.id}
-                            onClick={() => {
-                              setSortBy(opt.id);
-                              setSortOpen(false);
-                            }}
-                            className={`w-full text-left px-4 py-2.5 hover:bg-slate-50 dark:hover:bg-slate-700 font-semibold cursor-pointer ${
-                              sortBy === opt.id ? "text-primary bg-primary/5" : "text-slate-755 dark:text-slate-350"
-                            }`}
-                          >
-                            {opt.label}
-                          </button>
-                        ))}
-                      </div>
-                    </>
-                  )}
-                </div>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <button
+                      className="flex items-center justify-between gap-2 px-4 py-3 bg-slate-50 hover:bg-slate-100 dark:bg-slate-800 dark:hover:bg-slate-755 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-semibold text-slate-700 dark:text-slate-200 cursor-pointer w-full md:w-40 focus:outline-hidden"
+                    >
+                      <span>
+                        {sortBy === "rating" && "Top Rated"}
+                        {sortBy === "experience" && "Experience"}
+                        {sortBy === "fee_low" && "Price: Low to High"}
+                        {sortBy === "fee_high" && "Price: High to Low"}
+                      </span>
+                      <ChevronDown className="h-3.5 w-3.5 text-slate-400 flex-shrink-0" />
+                    </button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent className="w-48 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-xl py-2 z-50 text-xs mt-2" align="start">
+                    {[
+                      { id: "rating", label: "Top Rated" },
+                      { id: "experience", label: "Years of Experience" },
+                      { id: "fee_low", label: "Price: Low to High" },
+                      { id: "fee_high", label: "Price: High to Low" }
+                    ].map((opt) => (
+                      <DropdownMenuItem
+                        key={opt.id}
+                        onClick={() => setSortBy(opt.id)}
+                        className={`w-full text-left px-4 py-2.5 hover:bg-slate-50 dark:hover:bg-slate-705 font-semibold cursor-pointer rounded-lg ${
+                          sortBy === opt.id ? "text-primary bg-primary/5 font-bold" : "text-slate-700 dark:text-slate-300"
+                        }`}
+                      >
+                        {opt.label}
+                      </DropdownMenuItem>
+                    ))}
+                  </DropdownMenuContent>
+                </DropdownMenu>
 
                 {/* Reset Filters Trigger */}
                 <button

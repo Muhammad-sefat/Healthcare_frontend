@@ -13,6 +13,7 @@ import {
   AlertCircle
 } from "lucide-react";
 import { CustomModal } from "@/components/ui/custom-modal";
+import { DatePicker } from "@/components/ui/date-picker";
 
 interface TestItem {
   id: string;
@@ -359,12 +360,10 @@ export function DiagnosticsPage() {
                   <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">
                     Preferred Date *
                   </label>
-                  <input
-                    type="date"
-                    required
+                  <DatePicker
                     value={date}
-                    onChange={(e) => setDate(e.target.value)}
-                    className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-900 dark:text-white border border-slate-200 dark:border-slate-700 rounded-xl text-xs focus:outline-hidden focus:border-primary transition-colors text-center"
+                    onChange={setDate}
+                    placeholder="Select Date"
                   />
                 </div>
                 <div>

@@ -25,6 +25,17 @@ import {
   LogOut,
   ChevronDown
 } from "lucide-react";
+import { 
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+} from "@/components/ui/dropdown-menu";
+import {
+  Popover,
+  PopoverTrigger,
+  PopoverContent,
+} from "@/components/ui/popover";
 
 export default function DashboardLayout({
   children,
@@ -35,8 +46,6 @@ export default function DashboardLayout({
   const { currentUser, activeRole, currentProfile, switchRole, logout } = useAuth();
   
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [roleMenuOpen, setRoleMenuOpen] = useState(false);
-  const [notifMenuOpen, setNotifMenuOpen] = useState(false);
 
   // If not logged in, redirect to login
   React.useEffect(() => {
@@ -108,7 +117,6 @@ export default function DashboardLayout({
 
   const handleRoleSwitch = (role: Role) => {
     switchRole(role);
-    setRoleMenuOpen(false);
     router.push("/dashboard?tab=overview");
   };
 
@@ -270,72 +278,68 @@ export default function DashboardLayout({
           <div className="flex items-center gap-3 sm:gap-4">
             
             {/* Developer Toolbar Role Switcher Dropdown */}
-            <div className="relative">
-              <button
-                onClick={() => setRoleMenuOpen(!roleMenuOpen)}
-                className="flex items-center gap-1.5 bg-primary/10 border border-primary/20 hover:bg-primary/15 text-primary px-3 py-1.5 rounded-full text-xs font-bold transition-all shadow-xs cursor-pointer"
-              >
-                <Shield className="h-3.5 w-3.5" />
-                <span>Dev Switcher</span>
-                <ChevronDown className="h-3.5 w-3.5" />
-              </button>
-
-              {roleMenuOpen && (
-                <div className="absolute right-0 mt-2.5 w-48 bg-white dark:bg-slate-800 border border-slate-150 dark:border-slate-700 rounded-2xl shadow-xl py-2 z-50 text-xs">
-                  <div className="px-4 py-2 font-bold text-slate-400 border-b border-slate-50 dark:border-slate-750 uppercase tracking-wider text-[9px]">
-                    Select Active Role
-                  </div>
-                  {Object.values(Role).map((r) => (
-                    <button
-                      key={r}
-                      onClick={() => handleRoleSwitch(r)}
-                      className={`w-full text-left px-4 py-2.5 hover:bg-slate-50 dark:hover:bg-slate-700/60 font-semibold cursor-pointer ${
-                        activeRole === r ? "text-primary font-bold bg-primary/5" : "text-slate-600 dark:text-slate-350"
-                      }`}
-                    >
-                      {r.replace("_", " ")}
-                    </button>
-                  ))}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button
+                  className="flex items-center gap-1.5 bg-primary/10 border border-primary/20 hover:bg-primary/15 text-primary px-3 py-1.5 rounded-full text-xs font-bold transition-all shadow-xs cursor-pointer focus:outline-hidden"
+                >
+                  <Shield className="h-3.5 w-3.5" />
+                  <span>Dev Switcher</span>
+                  <ChevronDown className="h-3.5 w-3.5" />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent className="w-48 bg-white dark:bg-slate-800 border border-slate-150 dark:border-slate-700 rounded-2xl shadow-xl py-2 z-50 text-xs mt-2.5" align="end">
+                <div className="px-4 py-2 font-bold text-slate-400 border-b border-slate-50 dark:border-slate-750 uppercase tracking-wider text-[9px]">
+                  Select Active Role
                 </div>
-              )}
-            </div>
+                {Object.values(Role).map((r) => (
+                  <DropdownMenuItem
+                    key={r}
+                    onClick={() => handleRoleSwitch(r)}
+                    className={`w-full text-left px-4 py-2.5 hover:bg-slate-50 dark:hover:bg-slate-700/60 font-semibold cursor-pointer rounded-lg ${
+                      activeRole === r ? "text-primary font-bold bg-primary/5" : "text-slate-600 dark:text-slate-350"
+                    }`}
+                  >
+                    {r.replace("_", " ")}
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
 
             {/* Notifications Feed Bell */}
-            <div className="relative">
-              <button
-                onClick={() => setNotifMenuOpen(!notifMenuOpen)}
-                className="p-2.5 text-slate-400 hover:text-slate-650 hover:bg-slate-50 dark:hover:bg-slate-800 dark:text-slate-400 rounded-full transition-all cursor-pointer relative"
-              >
-                <Bell className="h-5 w-5" />
-                <span className="absolute top-1 right-1 h-2 w-2 bg-primary rounded-full ring-2 ring-white dark:ring-slate-900" />
-              </button>
-
-              {notifMenuOpen && (
-                <div className="absolute right-0 mt-2.5 w-72 bg-white dark:bg-slate-800 border border-slate-150 dark:border-slate-750 rounded-2xl shadow-xl py-2 z-50 text-xs">
-                  <div className="px-4 py-2 font-bold text-slate-450 border-b border-slate-50 dark:border-slate-750 uppercase tracking-wider text-[9px] flex justify-between items-center">
-                    <span>Notifications Feed</span>
-                    <span className="text-[10px] text-primary lowercase font-medium cursor-pointer">Mark read</span>
+            <Popover>
+              <PopoverTrigger asChild>
+                <button
+                  className="p-2.5 text-slate-400 hover:text-slate-650 hover:bg-slate-50 dark:hover:bg-slate-800 dark:text-slate-400 rounded-full transition-all cursor-pointer relative focus:outline-hidden"
+                >
+                  <Bell className="h-5 w-5" />
+                  <span className="absolute top-1 right-1 h-2 w-2 bg-primary rounded-full ring-2 ring-white dark:ring-slate-900" />
+                </button>
+              </PopoverTrigger>
+              <PopoverContent className="w-72 bg-white dark:bg-slate-800 border border-slate-150 dark:border-slate-750 rounded-2xl shadow-xl py-2 z-50 text-xs mt-2.5 p-0" align="end">
+                <div className="px-4 py-2 font-bold text-slate-450 border-b border-slate-50 dark:border-slate-750 uppercase tracking-wider text-[9px] flex justify-between items-center">
+                  <span>Notifications Feed</span>
+                  <span className="text-[10px] text-primary lowercase font-medium cursor-pointer">Mark read</span>
+                </div>
+                <div className="max-h-60 overflow-y-auto">
+                  <div className="px-4 py-3 border-b border-slate-50 dark:border-slate-750/50 hover:bg-slate-50 dark:hover:bg-slate-700/30">
+                    <span className="font-bold text-slate-800 dark:text-slate-200">Payment Verified</span>
+                    <p className="text-[10px] text-slate-400 mt-0.5">Your Stripe checkout of ৳1000 was verified.</p>
+                    <span className="text-[8px] text-slate-350 block mt-1">2 mins ago</span>
                   </div>
-                  <div className="max-h-60 overflow-y-auto">
-                    <div className="px-4 py-3 border-b border-slate-50 dark:border-slate-750/50 hover:bg-slate-50 dark:hover:bg-slate-700/30">
-                      <span className="font-bold text-slate-800 dark:text-slate-200">Payment Verified</span>
-                      <p className="text-[10px] text-slate-400 mt-0.5">Your Stripe checkout of ৳1000 was verified.</p>
-                      <span className="text-[8px] text-slate-350 block mt-1">2 mins ago</span>
-                    </div>
-                    <div className="px-4 py-3 border-b border-slate-50 dark:border-slate-750/50 hover:bg-slate-50 dark:hover:bg-slate-700/30">
-                      <span className="font-bold text-slate-800 dark:text-slate-200">Consultation Scheduled</span>
-                      <p className="text-[10px] text-slate-400 mt-0.5">Appointment with Dr. Sarah Jenkins is booked for 20th Jun.</p>
-                      <span className="text-[8px] text-slate-350 block mt-1">10 mins ago</span>
-                    </div>
-                    <div className="px-4 py-3 hover:bg-slate-50 dark:hover:bg-slate-700/30">
-                      <span className="font-bold text-slate-800 dark:text-slate-200">Welcome to CarePulse</span>
-                      <p className="text-[10px] text-slate-400 mt-0.5">Profile set up completed successfully. Get started online.</p>
-                      <span className="text-[8px] text-slate-350 block mt-1">1 hour ago</span>
-                    </div>
+                  <div className="px-4 py-3 border-b border-slate-50 dark:border-slate-750/50 hover:bg-slate-50 dark:hover:bg-slate-700/30">
+                    <span className="font-bold text-slate-800 dark:text-slate-200">Consultation Scheduled</span>
+                    <p className="text-[10px] text-slate-400 mt-0.5">Appointment with Dr. Sarah Jenkins is booked for 20th Jun.</p>
+                    <span className="text-[8px] text-slate-350 block mt-1">10 mins ago</span>
+                  </div>
+                  <div className="px-4 py-3 hover:bg-slate-50 dark:hover:bg-slate-700/30">
+                    <span className="font-bold text-slate-800 dark:text-slate-200">Welcome to CarePulse</span>
+                    <p className="text-[10px] text-slate-400 mt-0.5">Profile set up completed successfully. Get started online.</p>
+                    <span className="text-[8px] text-slate-350 block mt-1">1 hour ago</span>
                   </div>
                 </div>
-              )}
-            </div>
+              </PopoverContent>
+            </Popover>
 
             {/* Profile Avatar Trigger */}
             <div className="flex items-center gap-2 border-l border-slate-100 dark:border-slate-800 pl-3">
