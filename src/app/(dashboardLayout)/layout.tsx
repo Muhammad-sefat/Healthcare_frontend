@@ -1,8 +1,8 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, Suspense } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/providers/authProvider";
 import { Role } from "@/types";
 import { 
@@ -103,13 +103,7 @@ export default function DashboardLayout({
 
   const handleTabClick = (tab: string) => {
     setSidebarOpen(false);
-    
-    // If clicking "book" or "profile" when on dashboard, we will handle it via search params
-    if (tab === "book") {
-      router.push("/doctors");
-    } else {
-      router.push(`/dashboard?tab=${tab}`);
-    }
+    router.push(`/dashboard?tab=${tab}`);
   };
 
   const handleRoleSwitch = (role: Role) => {
@@ -160,18 +154,9 @@ export default function DashboardLayout({
         </div>
 
         {/* Nav Links */}
-        <nav className="flex-1 px-4 py-6 space-y-1.5 overflow-y-auto">
-          {menuLinks.map((link, idx) => (
-            <button
-              key={idx}
-              onClick={() => handleTabClick(link.tab)}
-              className="w-full flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-xl text-slate-650 hover:bg-slate-50 dark:text-slate-350 dark:hover:bg-slate-800 hover:text-slate-900 transition-all cursor-pointer"
-            >
-              {link.icon}
-              {link.label}
-            </button>
-          ))}
-        </nav>
+        <Suspense fallback={<div className="flex-1 px-4 py-6 text-center text-xs text-slate-400">Loading navigation...</div>}>
+          <SidebarNav menuLinks={menuLinks} handleTabClick={handleTabClick} />
+        </Suspense>
 
         {/* Footer Actions */}
         <div className="p-4 border-t border-slate-100 dark:border-slate-850 space-y-2">
@@ -238,18 +223,9 @@ export default function DashboardLayout({
             </div>
 
             {/* Links */}
-            <nav className="flex-1 px-4 py-6 space-y-1.5 overflow-y-auto">
-              {menuLinks.map((link, idx) => (
-                <button
-                  key={idx}
-                  onClick={() => handleTabClick(link.tab)}
-                  className="w-full flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-xl text-slate-650 hover:bg-slate-50 dark:text-slate-350 dark:hover:bg-slate-800 transition-colors"
-                >
-                  {link.icon}
-                  {link.label}
-                </button>
-              ))}
-            </nav>
+            <Suspense fallback={<div className="flex-1 px-4 py-6 text-center text-xs text-slate-400">Loading navigation...</div>}>
+              <SidebarNav menuLinks={menuLinks} handleTabClick={handleTabClick} />
+            </Suspense>
 
             <div className="p-4 border-t border-slate-150 dark:border-slate-850 space-y-2">
               <Link
@@ -385,5 +361,37 @@ export default function DashboardLayout({
       </div>
 
     </div>
+  );
+}
+
+interface SidebarNavProps {
+  menuLinks: { label: string; icon: React.ReactNode; tab: string }[];
+  handleTabClick: (tab: string) => void;
+}
+
+function SidebarNav({ menuLinks, handleTabClick }: SidebarNavProps) {
+  const searchParams = useSearchParams();
+  const activeTab = searchParams.get("tab") || "overview";
+
+  return (
+    <nav className="flex-1 px-4 py-6 space-y-1.5 overflow-y-auto">
+      {menuLinks.map((link, idx) => {
+        const isActive = activeTab === link.tab;
+        return (
+          <button
+            key={idx}
+            onClick={() => handleTabClick(link.tab)}
+            className={`w-full flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-xl transition-all cursor-pointer ${
+              isActive
+                ? "bg-primary/10 text-primary font-bold dark:bg-primary/20 dark:text-primary"
+                : "text-slate-655 hover:bg-slate-50 dark:text-slate-350 dark:hover:bg-slate-800 hover:text-slate-900"
+            }`}
+          >
+            {link.icon}
+            {link.label}
+          </button>
+        );
+      })}
+    </nav>
   );
 }

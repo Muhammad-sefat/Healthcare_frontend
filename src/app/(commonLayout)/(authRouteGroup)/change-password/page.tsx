@@ -1,6 +1,6 @@
 import React from "react";
-import { ChangePasswordForm } from "@/features/auth/components/ChangePasswordForm";
+import ChangePasswordPage from "@/features/auth/pages/ChangePasswordPage";
 
-export default function ChangePasswordPage() {
-  return <ChangePasswordForm />;
+export default function Page() {
+  return <ChangePasswordPage />;
 }

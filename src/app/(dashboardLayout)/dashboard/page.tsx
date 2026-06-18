@@ -1,7 +1,7 @@
 "use client";
 
-import { DashboardView } from "@/features/dashboard/components/DashboardView";
+import { DashboardPage } from "@/features/dashboard/pages/DashboardPage";
 
 export default function UnifiedDashboardPage() {
-  return <DashboardView />;
+  return <DashboardPage />;
 }

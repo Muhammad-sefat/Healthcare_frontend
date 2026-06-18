@@ -12,7 +12,8 @@ import {
   Clock, 
   GraduationCap, 
   ArrowRight,
-  Filter
+  Filter,
+  ChevronDown
 } from "lucide-react";
 
 export function DoctorsListView() {
@@ -24,6 +25,11 @@ export function DoctorsListView() {
   const [selectedSpecialty, setSelectedSpecialty] = useState("");
   const [maxFee, setMaxFee] = useState<number>(2000);
   const [sortBy, setSortBy] = useState<string>("rating"); // "rating" | "experience" | "fee_low" | "fee_high"
+
+  // Dropdown States
+  const [specialtyOpen, setSpecialtyOpen] = useState(false);
+  const [feeOpen, setFeeOpen] = useState(false);
+  const [sortOpen, setSortOpen] = useState(false);
 
   // Load URL query parameters if present
   useEffect(() => {
@@ -77,111 +83,198 @@ export function DoctorsListView() {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-4 gap-8 items-start">
+          <div className="space-y-6">
             
-            {/* Filters Sidebar */}
-            <div className="bg-white dark:bg-slate-900 border border-slate-150 dark:border-slate-800 rounded-3xl p-6 space-y-6 shadow-xs">
-              <div className="flex items-center gap-2 pb-4 border-b border-slate-100 dark:border-slate-850">
-                <SlidersHorizontal className="h-5 w-5 text-primary" />
-                <h2 className="font-bold text-slate-950 dark:text-white text-base">Filter Search</h2>
-              </div>
-
-              {/* Specialty Filter */}
-              <div className="space-y-2">
-                <label className="block text-xs font-semibold text-slate-400 dark:text-slate-505 uppercase tracking-wider">
-                  Specialty
-                </label>
-                <select
-                  value={selectedSpecialty}
-                  onChange={(e) => setSelectedSpecialty(e.target.value)}
-                  className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-850 dark:text-white rounded-xl border border-slate-200 dark:border-slate-700 text-sm focus:outline-hidden focus:border-primary transition-colors appearance-none cursor-pointer"
-                >
-                  <option value="">All Specialties</option>
-                  {specialties.map((spec) => (
-                    <option key={spec.id} value={spec.id}>
-                      {spec.title}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              {/* Maximum Fee Filter */}
-              <div className="space-y-2">
-                <div className="flex justify-between text-xs font-semibold uppercase tracking-wider text-slate-455 dark:text-slate-505">
-                  <span>Max Fee</span>
-                  <span className="text-primary font-bold">৳{maxFee}</span>
-                </div>
-                <input
-                  type="range"
-                  min="500"
-                  max="3000"
-                  step="100"
-                  value={maxFee}
-                  onChange={(e) => setMaxFee(Number(e.target.value))}
-                  className="w-full accent-primary cursor-pointer"
-                />
-                <div className="flex justify-between text-[10px] text-slate-405 font-medium">
-                  <span>৳500</span>
-                  <span>৳3,000</span>
-                </div>
-              </div>
-
-              {/* Sort By Filter */}
-              <div className="space-y-2">
-                <label className="block text-xs font-semibold text-slate-400 dark:text-slate-505 uppercase tracking-wider">
-                  Sort By
-                </label>
-                <select
-                  value={sortBy}
-                  onChange={(e) => setSortBy(e.target.value)}
-                  className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-850 dark:text-white rounded-xl border border-slate-200 dark:border-slate-700 text-sm focus:outline-hidden focus:border-primary transition-colors appearance-none cursor-pointer"
-                >
-                  <option value="rating">Top Rated</option>
-                  <option value="experience">Years of Experience</option>
-                  <option value="fee_low">Price: Low to High</option>
-                  <option value="fee_high">Price: High to Low</option>
-                </select>
-              </div>
-
-              {/* Reset Button */}
-              <button
-                onClick={() => {
-                  setSearchTerm("");
-                  setSelectedSpecialty("");
-                  setMaxFee(2000);
-                  setSortBy("rating");
-                }}
-                className="w-full border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 py-3 rounded-xl text-xs font-bold text-slate-505 hover:text-slate-800 transition-all cursor-pointer"
-              >
-                Clear Filters
-              </button>
-            </div>
-
-            {/* Doctor Listings Grid */}
-            <div className="lg:col-span-3 space-y-6">
+            {/* Horizontal Filter Toolbar */}
+            <div className="bg-white dark:bg-slate-900 border border-slate-150 dark:border-slate-800 rounded-3xl p-5 shadow-xs flex flex-col md:flex-row gap-4 items-center justify-between">
               
               {/* Search Bar Input */}
-              <div className="relative">
+              <div className="relative w-full md:flex-1">
                 <Search className="absolute left-4 top-3.5 h-5 w-5 text-slate-400" />
                 <input
                   type="text"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   placeholder="Search by doctor name, workplace, degree, or designation..."
-                  className="w-full pl-12 pr-4 py-3 bg-white dark:bg-slate-900 border border-slate-150 dark:border-slate-800 rounded-2xl shadow-xs text-sm focus:outline-hidden focus:border-primary transition-colors dark:text-white"
+                  className="w-full pl-12 pr-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-150 dark:border-slate-700 rounded-2xl shadow-xs text-sm focus:outline-hidden focus:border-primary transition-colors dark:text-white"
                 />
               </div>
 
-              {/* Active Filters Summary */}
-              <div className="flex flex-wrap items-center justify-between gap-4 text-xs text-slate-500">
-                <div>
-                  Showing <span className="font-bold text-slate-800 dark:text-slate-200">{filteredDoctors.length}</span> doctors available
-                </div>
-              </div>
+              {/* Dropdown Filters */}
+              <div className="flex flex-wrap items-center gap-3 w-full md:w-auto">
+                {/* Specialty Dropdown */}
+                <div className="relative">
+                  <button
+                    onClick={() => {
+                      setSpecialtyOpen(!specialtyOpen);
+                      setFeeOpen(false);
+                      setSortOpen(false);
+                    }}
+                    className="flex items-center justify-between gap-2 px-4 py-3 bg-slate-50 hover:bg-slate-100 dark:bg-slate-800 dark:hover:bg-slate-750 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-semibold text-slate-700 dark:text-slate-200 cursor-pointer w-full md:w-44"
+                  >
+                    <span className="truncate">
+                      {selectedSpecialty 
+                        ? specialties.find(s => s.id === selectedSpecialty)?.title 
+                        : "All Specialties"}
+                    </span>
+                    <ChevronDown className="h-3.5 w-3.5 text-slate-400 flex-shrink-0" />
+                  </button>
 
-              {/* Doctors Grid */}
-              {filteredDoctors.length > 0 ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {specialtyOpen && (
+                    <>
+                      <div className="fixed inset-0 z-40" onClick={() => setSpecialtyOpen(false)} />
+                      <div className="absolute right-0 md:left-0 mt-2 w-56 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-xl py-2 z-50 text-xs animate-in fade-in slide-in-from-top-1 duration-150">
+                        <button
+                          onClick={() => {
+                            setSelectedSpecialty("");
+                            setSpecialtyOpen(false);
+                          }}
+                          className={`w-full text-left px-4 py-2.5 hover:bg-slate-50 dark:hover:bg-slate-700 font-semibold cursor-pointer ${
+                            !selectedSpecialty ? "text-primary bg-primary/5" : "text-slate-755 dark:text-slate-350"
+                          }`}
+                        >
+                          All Specialties
+                        </button>
+                        {specialties.map((spec) => (
+                          <button
+                            key={spec.id}
+                            onClick={() => {
+                              setSelectedSpecialty(spec.id);
+                              setSpecialtyOpen(false);
+                            }}
+                            className={`w-full text-left px-4 py-2.5 hover:bg-slate-50 dark:hover:bg-slate-700 font-semibold cursor-pointer ${
+                              selectedSpecialty === spec.id ? "text-primary bg-primary/5" : "text-slate-755 dark:text-slate-350"
+                            }`}
+                          >
+                            {spec.title}
+                          </button>
+                        ))}
+                      </div>
+                    </>
+                  )}
+                </div>
+
+                {/* Price Limit Dropdown */}
+                <div className="relative">
+                  <button
+                    onClick={() => {
+                      setFeeOpen(!feeOpen);
+                      setSpecialtyOpen(false);
+                      setSortOpen(false);
+                    }}
+                    className="flex items-center justify-between gap-2 px-4 py-3 bg-slate-50 hover:bg-slate-100 dark:bg-slate-800 dark:hover:bg-slate-755 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-semibold text-slate-700 dark:text-slate-200 cursor-pointer w-full md:w-36"
+                  >
+                    <span>Fee: ৳{maxFee}</span>
+                    <ChevronDown className="h-3.5 w-3.5 text-slate-400 flex-shrink-0" />
+                  </button>
+
+                  {feeOpen && (
+                    <>
+                      <div className="fixed inset-0 z-45" onClick={() => setFeeOpen(false)} />
+                      <div className="absolute right-0 mt-2 w-64 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-xl p-4 z-50 text-xs animate-in fade-in slide-in-from-top-1 duration-150 space-y-3">
+                        <div className="flex justify-between font-bold text-slate-700 dark:text-slate-300">
+                          <span>Max Consult Fee</span>
+                          <span className="text-primary font-extrabold">৳{maxFee}</span>
+                        </div>
+                        <input
+                          type="range"
+                          min="500"
+                          max="3000"
+                          step="100"
+                          value={maxFee}
+                          onChange={(e) => setMaxFee(Number(e.target.value))}
+                          className="w-full accent-primary cursor-pointer"
+                        />
+                        <div className="flex justify-between text-[9px] text-slate-400">
+                          <span>৳500</span>
+                          <span>৳3,000</span>
+                        </div>
+                        <div className="flex justify-end pt-2 border-t border-slate-100 dark:border-slate-700">
+                          <button
+                            type="button"
+                            onClick={() => setFeeOpen(false)}
+                            className="bg-primary hover:bg-primary/90 text-white px-3 py-1.5 rounded-lg font-bold text-[10px] cursor-pointer"
+                          >
+                            Apply
+                          </button>
+                        </div>
+                      </div>
+                    </>
+                  )}
+                </div>
+
+                {/* Sort Order Dropdown */}
+                <div className="relative">
+                  <button
+                    onClick={() => {
+                      setSortOpen(!sortOpen);
+                      setSpecialtyOpen(false);
+                      setFeeOpen(false);
+                    }}
+                    className="flex items-center justify-between gap-2 px-4 py-3 bg-slate-50 hover:bg-slate-100 dark:bg-slate-800 dark:hover:bg-slate-755 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-semibold text-slate-700 dark:text-slate-200 cursor-pointer w-full md:w-40"
+                  >
+                    <span>
+                      {sortBy === "rating" && "Top Rated"}
+                      {sortBy === "experience" && "Experience"}
+                      {sortBy === "fee_low" && "Price: Low to High"}
+                      {sortBy === "fee_high" && "Price: High to Low"}
+                    </span>
+                    <ChevronDown className="h-3.5 w-3.5 text-slate-400 flex-shrink-0" />
+                  </button>
+
+                  {sortOpen && (
+                    <>
+                      <div className="fixed inset-0 z-40" onClick={() => setSortOpen(false)} />
+                      <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-xl py-2 z-50 text-xs animate-in fade-in slide-in-from-top-1 duration-150">
+                        {[
+                          { id: "rating", label: "Top Rated" },
+                          { id: "experience", label: "Years of Experience" },
+                          { id: "fee_low", label: "Price: Low to High" },
+                          { id: "fee_high", label: "Price: High to Low" }
+                        ].map((opt) => (
+                          <button
+                            key={opt.id}
+                            onClick={() => {
+                              setSortBy(opt.id);
+                              setSortOpen(false);
+                            }}
+                            className={`w-full text-left px-4 py-2.5 hover:bg-slate-50 dark:hover:bg-slate-700 font-semibold cursor-pointer ${
+                              sortBy === opt.id ? "text-primary bg-primary/5" : "text-slate-755 dark:text-slate-350"
+                            }`}
+                          >
+                            {opt.label}
+                          </button>
+                        ))}
+                      </div>
+                    </>
+                  )}
+                </div>
+
+                {/* Reset Filters Trigger */}
+                <button
+                  onClick={() => {
+                    setSearchTerm("");
+                    setSelectedSpecialty("");
+                    setMaxFee(2000);
+                    setSortBy("rating");
+                  }}
+                  className="px-4 py-3 border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-xl text-xs font-bold text-slate-500 hover:text-slate-800 transition-all cursor-pointer w-full md:w-auto"
+                >
+                  Reset
+                </button>
+              </div>
+            </div>
+
+            {/* Active Filters Summary */}
+            <div className="flex flex-wrap items-center justify-between gap-4 text-xs text-slate-500 px-2">
+              <div>
+                Showing <span className="font-bold text-slate-800 dark:text-slate-200">{filteredDoctors.length}</span> doctors available
+              </div>
+            </div>
+
+            {/* Doctors Grid */}
+            {filteredDoctors.length > 0 ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-fadeIn">
                   {filteredDoctors.map((doc) => (
                     <div
                       key={doc.id}
@@ -272,6 +365,5 @@ export function DoctorsListView() {
             </div>
           </div>
         </div>
-      </div>
   );
 }

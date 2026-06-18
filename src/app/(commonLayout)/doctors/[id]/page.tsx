@@ -1,6 +1,6 @@
 import React from "react";
-import { DoctorDetailView } from "@/features/doctors/components/DoctorDetailView";
+import DoctorDetailPage from "@/features/doctors/pages/DoctorDetailPage";
 
 export default function DoctorDetails({ params }: { params: Promise<{ id: string }> }) {
-  return <DoctorDetailView params={params} />;
+  return <DoctorDetailPage params={params} />;
 }

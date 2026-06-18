@@ -1,7 +1,6 @@
 import React from "react";
+import NgosPage from "@/features/ngos/pages/NgosPage";
 
-function NGOsPage() {
-  return <div>NGOsPage</div>;
+export default function NGOs() {
+  return <NgosPage />;
 }
-
-export default NGOsPage;

@@ -35,7 +35,10 @@ export function DashboardContent() {
     reviews,
     schedules,
     patients,
+    doctors,
+    specialties,
     // Actions
+    bookAppointment,
     updatePatientProfile,
     uploadMedicalReport,
     deleteMedicalReport,
@@ -274,6 +277,10 @@ export function DashboardContent() {
             setPatHistory={setPatHistory}
             reportFileName={reportFileName}
             setReportFileName={setReportFileName}
+            doctors={doctors}
+            specialties={specialties}
+            schedules={schedules}
+            bookAppointment={bookAppointment}
             handleProfileSave={handleProfileSave}
             handleReportUploadSubmit={handleReportUploadSubmit}
             deleteMedicalReport={deleteMedicalReport}
