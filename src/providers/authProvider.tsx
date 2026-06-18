@@ -16,7 +16,8 @@ import {
   Specialty, 
   Schedule,
   Admin,
-  User
+  User,
+  PatientHealthData
 } from "@/types";
 import { 
   mockDoctors, 
@@ -54,7 +55,7 @@ interface AuthContextType {
   switchRole: (role: Role) => void;
 
   // Actions
-  updatePatientProfile: (profile: Partial<Patient>, healthData: any) => void;
+  updatePatientProfile: (profile: Partial<Patient>, healthData: Partial<PatientHealthData>) => void;
   uploadMedicalReport: (fileName: string) => void;
   deleteMedicalReport: (reportId: string) => void;
   
@@ -112,7 +113,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     login("johndoe@gmail.com", Role.PATIENT);
   }, []);
 
-  const login = (email: string, role: Role): boolean => {
+  function login(email: string, role: Role): boolean {
     // Find matching user or fallback
     const existingUser = users.find(u => u.email === email && u.role === role);
     
@@ -165,7 +166,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
 
     return true;
-  };
+  }
 
   const register = (name: string, email: string) => {
     const patientId = `patient-uuid-${Math.floor(Math.random() * 1000)}`;
@@ -259,7 +260,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // ----------------------------------------------------
   // Patients Actions
   // ----------------------------------------------------
-  const updatePatientProfile = (profile: Partial<Patient>, healthData: any) => {
+  const updatePatientProfile = (profile: Partial<Patient>, healthData: Partial<PatientHealthData>) => {
     setPatients(prev => prev.map(p => {
       if (p.id === currentProfile?.id) {
         const updated = {

@@ -2,12 +2,11 @@
 
 import React from "react";
 import Link from "next/link";
-import CommonLayout from "../layout";
 import { ShieldAlert, Home, ArrowLeft } from "lucide-react";
 
 export default function UnauthorizedPage() {
   return (
-    <CommonLayout>
+    <>
       <div className="max-w-7xl mx-auto px-4 py-24 text-center space-y-6 flex flex-col items-center justify-center min-h-[70vh]">
         <div className="bg-rose-50 dark:bg-rose-950/20 text-rose-500 p-4 rounded-full shadow-inner animate-pulse">
           <ShieldAlert className="h-14 w-14" />
@@ -39,6 +38,6 @@ export default function UnauthorizedPage() {
           </Link>
         </div>
       </div>
-    </CommonLayout>
+    </>
   );
 }

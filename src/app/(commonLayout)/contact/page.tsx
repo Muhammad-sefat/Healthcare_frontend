@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useState } from "react";
-import CommonLayout from "../layout";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -80,7 +79,7 @@ export default function ContactSupport() {
   ];
 
   return (
-    <CommonLayout>
+    <>
       <div className="bg-slate-50 dark:bg-slate-950 py-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
           
@@ -232,6 +231,6 @@ export default function ContactSupport() {
           </div>
         </div>
       </div>
-    </CommonLayout>
+    </>
   );
 }

@@ -1,14 +1,17 @@
-import React, { Suspense } from "react";
-import { ResetPasswordForm } from "@/features/auth/components/ResetPasswordForm";
+"use client";
 
-export default function ResetPasswordPage() {
+import React, { Suspense } from "react";
+import { DashboardContent } from "./DashboardContent";
+
+export function DashboardView() {
   return (
     <Suspense fallback={
       <div className="min-h-screen bg-slate-50 flex items-center justify-center">
         <div className="h-8 w-8 border-4 border-primary/20 border-t-primary rounded-full animate-spin" />
       </div>
     }>
-      <ResetPasswordForm />
+      <DashboardContent />
     </Suspense>
   );
 }
+export default DashboardView;
