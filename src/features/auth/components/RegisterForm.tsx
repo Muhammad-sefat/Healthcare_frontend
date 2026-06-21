@@ -1,63 +1,54 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
-
-import React from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import * as z from "zod";
-import { useAuth } from "@/providers/authProvider";
-import { 
-  Stethoscope, 
-  User, 
-  Mail, 
-  Lock, 
-  ArrowRight 
-} from "lucide-react";
-
-const registerSchema = z.object({
-  name: z.string().min(2, "Name must be at least 2 characters"),
-  email: z.string().email("Please enter a valid email address"),
-  password: z.string().min(6, "Password must be at least 6 characters"),
-  agreeTerms: z.literal(true, {
-    errorMap: () => ({ message: "You must accept the terms & privacy policies" })
-  })
-});
-
-type RegisterFormData = z.infer<typeof registerSchema>;
+import { Stethoscope, User, Mail, Lock, ArrowRight } from "lucide-react";
+import { registerSchema } from "../validation/register.schema";
+import { RegisterSchema } from "../types/auth.type";
+import { useRegister } from "../hooks/useRegister";
+import { toast } from "sonner";
 
 export function RegisterForm() {
   const router = useRouter();
-  const { register: registerMockPatient } = useAuth();
+  const registerMutation = useRegister();
 
   const {
     register: formRegister,
     handleSubmit,
-    formState: { errors, isSubmitting }
-  } = useForm<RegisterFormData>({
+    formState: { errors },
+  } = useForm<RegisterSchema>({
     resolver: zodResolver(registerSchema),
     defaultValues: {
       name: "",
       email: "",
-      password: ""
-    }
+      password: "",
+    },
   });
 
-  const onSubmit = async (data: RegisterFormData) => {
-    // Simulate API delay
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    
-    // Register patient in local database context
-    registerMockPatient(data.name, data.email);
-    
-    // Redirect to dashboard
-    router.push("/dashboard");
+  const onSubmit = async (data: RegisterSchema) => {
+    try {
+      const response = await registerMutation.mutateAsync({
+        name: data.name,
+        email: data.email,
+        password: data.password,
+      });
+
+      toast.success(response.message || "Account created successfully!");
+
+      // Wait 1.5 seconds so the user can read the toast
+      setTimeout(() => {
+        router.push("/dashboard");
+      }, 1500);
+    } catch (error: any) {
+      toast.error(error?.response?.data?.message || "Something went wrong!");
+    }
   };
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex flex-col justify-center py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full mx-auto space-y-8 bg-white dark:bg-slate-900 border border-slate-150 dark:border-slate-800 rounded-3xl p-8 shadow-xl">
-        
         {/* Header */}
         <div className="text-center">
           <Link href="/" className="inline-flex items-center gap-2 mb-4">
@@ -73,7 +64,10 @@ export function RegisterForm() {
           </h2>
           <p className="mt-1.5 text-xs text-slate-400">
             Already registered?{" "}
-            <Link href="/login" className="font-semibold text-primary hover:underline">
+            <Link
+              href="/login"
+              className="font-semibold text-primary hover:underline"
+            >
               Sign in to your account
             </Link>
           </p>
@@ -81,7 +75,6 @@ export function RegisterForm() {
 
         {/* Credentials Form */}
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-          
           {/* Name Input */}
           <div className="space-y-2">
             <label className="block text-xs font-bold text-slate-450 dark:text-slate-500 uppercase tracking-wider">
@@ -97,7 +90,9 @@ export function RegisterForm() {
               />
             </div>
             {errors.name && (
-              <p className="text-[11px] text-destructive font-medium">{errors.name.message}</p>
+              <p className="text-[11px] text-destructive font-medium">
+                {errors.name.message}
+              </p>
             )}
           </div>
 
@@ -116,7 +111,9 @@ export function RegisterForm() {
               />
             </div>
             {errors.email && (
-              <p className="text-[11px] text-destructive font-medium">{errors.email.message}</p>
+              <p className="text-[11px] text-destructive font-medium">
+                {errors.email.message}
+              </p>
             )}
           </div>
 
@@ -135,7 +132,9 @@ export function RegisterForm() {
               />
             </div>
             {errors.password && (
-              <p className="text-[11px] text-destructive font-medium">{errors.password.message}</p>
+              <p className="text-[11px] text-destructive font-medium">
+                {errors.password.message}
+              </p>
             )}
           </div>
 
@@ -148,29 +147,41 @@ export function RegisterForm() {
                 {...formRegister("agreeTerms")}
                 className="h-4 w-4 text-primary focus:ring-primary border-slate-300 rounded-sm mt-0.5 cursor-pointer"
               />
-              <label htmlFor="agreeTerms" className="ml-2.5 block text-xs text-slate-500 dark:text-slate-400 cursor-pointer">
+              <label
+                htmlFor="agreeTerms"
+                className="ml-2.5 block text-xs text-slate-500 dark:text-slate-400 cursor-pointer"
+              >
                 I agree to the CarePulse{" "}
-                <a href="#" className="font-semibold text-primary hover:underline">
+                <a
+                  href="#"
+                  className="font-semibold text-primary hover:underline"
+                >
                   Terms of Service
                 </a>{" "}
                 and{" "}
-                <a href="#" className="font-semibold text-primary hover:underline">
+                <a
+                  href="#"
+                  className="font-semibold text-primary hover:underline"
+                >
                   Privacy Policy
-                </a>.
+                </a>
+                .
               </label>
             </div>
             {errors.agreeTerms && (
-              <p className="text-[11px] text-destructive font-medium">{errors.agreeTerms.message}</p>
+              <p className="text-[11px] text-destructive font-medium">
+                {errors.agreeTerms.message}
+              </p>
             )}
           </div>
 
           {/* Submit CTA */}
           <button
             type="submit"
-            disabled={isSubmitting}
+            disabled={registerMutation.isPending}
             className="w-full bg-primary hover:bg-primary/95 text-white py-3.5 rounded-xl text-xs font-bold shadow-md shadow-primary/10 transition-colors flex items-center justify-center gap-2 cursor-pointer disabled:cursor-not-allowed"
           >
-            {isSubmitting ? (
+            {registerMutation.isPending ? (
               <>
                 <div className="h-3.5 w-3.5 border-2 border-white/20 border-t-white rounded-full animate-spin" />
                 Creating Account...
@@ -183,7 +194,6 @@ export function RegisterForm() {
             )}
           </button>
         </form>
-
       </div>
     </div>
   );

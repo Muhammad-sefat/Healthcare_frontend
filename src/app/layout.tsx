@@ -3,6 +3,7 @@ import { Plus_Jakarta_Sans, Geist_Mono } from "next/font/google";
 import { AuthProvider } from "@/providers/authProvider";
 import { Toaster } from "@/components/ui/sonner";
 import "./globals.css";
+import ReactQueryProvider from "@/providers/ReactQueryProvider";
 
 const plusJakartaSans = Plus_Jakarta_Sans({
   variable: "--font-sans",
@@ -15,8 +16,9 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "CarePulse | Modern Hospital Management System",
-  description: "A premium, unified healthcare platform for patients, doctors, and administrators.",
+  title: "CarePulse",
+  description:
+    "A premium, unified healthcare platform for patients, doctors, and administrators.",
 };
 
 export default function RootLayout({
@@ -31,12 +33,10 @@ export default function RootLayout({
     >
       <body className="min-h-full flex flex-col font-sans">
         <AuthProvider>
-          {children}
+          <ReactQueryProvider>{children}</ReactQueryProvider>
           <Toaster />
         </AuthProvider>
       </body>
     </html>
   );
 }
-
-
