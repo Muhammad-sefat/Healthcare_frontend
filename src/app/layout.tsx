@@ -4,6 +4,7 @@ import { AuthProvider } from "@/providers/authProvider";
 import { Toaster } from "@/components/ui/sonner";
 import "./globals.css";
 import ReactQueryProvider from "@/providers/ReactQueryProvider";
+import ReduxProvider from "@/providers/ReduxProvider";
 
 const plusJakartaSans = Plus_Jakarta_Sans({
   variable: "--font-sans",
@@ -32,10 +33,12 @@ export default function RootLayout({
       className={`${plusJakartaSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col font-sans">
-        <AuthProvider>
-          <ReactQueryProvider>{children}</ReactQueryProvider>
-          <Toaster />
-        </AuthProvider>
+        <ReduxProvider>
+          <AuthProvider>
+            <ReactQueryProvider>{children}</ReactQueryProvider>
+            <Toaster />
+          </AuthProvider>
+        </ReduxProvider>
       </body>
     </html>
   );

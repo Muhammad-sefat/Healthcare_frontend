@@ -31,6 +31,7 @@ import {
   mockUsers,
   mockDoctorSchedules 
 } from "@/constants/mockData";
+import { getMe } from "@/features/auth/api/auth.api";
 
 interface AuthContextType {
   currentUser: User | null;
@@ -86,6 +87,7 @@ interface AuthContextType {
   // Super Admin actions
   createAdmin: (name: string, email: string, contactNumber: string, role: Role) => void;
   deleteAdmin: (adminId: string) => void;
+  setRealSession: (user: any, profile: any) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -108,10 +110,87 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [currentProfile, setCurrentProfile] = useState<Patient | Doctor | Admin | null>(null);
   const [needsPasswordChange, setNeedsPasswordChange] = useState(false);
 
-  // Auto-login to Patient role initially to make standard dashboard review easy
+  // Auto-login to Patient role initially to make standard dashboard review easy or restore real session
   useEffect(() => {
-    login("johndoe@gmail.com", Role.PATIENT);
+    const savedToken = typeof window !== "undefined" ? localStorage.getItem("accessToken") : null;
+    const savedUserStr = typeof window !== "undefined" ? localStorage.getItem("user") : null;
+    const savedProfileStr = typeof window !== "undefined" ? localStorage.getItem("profile") : null;
+
+    const restoreSession = async () => {
+      if (savedToken) {
+        try {
+          // Fetch the latest profile data using the getMe API function
+          console.log("%c[Auth] Fetching profile from backend `/auth/me`...", "color: #0284c7; font-weight: bold;");
+          const response = await getMe();
+          console.log("%c[Auth] Successfully fetched profile from backend:", "color: #16a34a; font-weight: bold;", response);
+          
+          if (response && response.success) {
+            const userData = response.data;
+            const user = {
+              id: userData.id,
+              email: userData.email,
+              name: userData.name,
+              role: userData.role,
+              status: userData.status,
+              needsPasswordChange: userData.needsPasswordChange || false,
+              createdAt: userData.createdAt,
+              updatedAt: userData.updatedAt,
+            };
+            
+            let profile = null;
+            if (user.role === Role.PATIENT) {
+              profile = userData.patient;
+            } else if (user.role === Role.DOCTOR) {
+              profile = userData.doctor;
+            } else if (user.role === Role.ADMIN || user.role === Role.SUPER_ADMIN) {
+              profile = userData.admin;
+            }
+
+            setCurrentUser(user);
+            setActiveRole(user.role);
+            setCurrentProfile(profile);
+            setNeedsPasswordChange(user.needsPasswordChange || false);
+
+            if (typeof window !== "undefined") {
+              localStorage.setItem("user", JSON.stringify(user));
+              localStorage.setItem("profile", JSON.stringify(profile));
+            }
+            return;
+          }
+        } catch (err) {
+          console.error("Failed to fetch fresh user profile from backend:", err);
+          // If token expired, log out
+          logout();
+        }
+      }
+
+      // Fallback to local storage if API fetch fails or isn't executed
+      if (savedUserStr && savedProfileStr) {
+        try {
+          const user = JSON.parse(savedUserStr);
+          const profile = JSON.parse(savedProfileStr);
+          setCurrentUser(user);
+          setActiveRole(user.role);
+          setCurrentProfile(profile);
+          return;
+        } catch (e) {
+          console.error("Error parsing stored session:", e);
+        }
+      }
+    };
+
+    restoreSession();
   }, []);
+
+  const setRealSession = (user: any, profile: any) => {
+    setCurrentUser(user);
+    setCurrentProfile(profile);
+    setActiveRole(user.role);
+    setNeedsPasswordChange(user.needsPasswordChange || false);
+    if (typeof window !== "undefined") {
+      localStorage.setItem("profile", JSON.stringify(profile));
+    }
+  };
 
   function login(email: string, role: Role): boolean {
     // Find matching user or fallback
@@ -225,6 +304,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setActiveRole(null);
     setCurrentProfile(null);
     setNeedsPasswordChange(false);
+    if (typeof window !== "undefined") {
+      localStorage.removeItem("accessToken");
+      localStorage.removeItem("refreshToken");
+      localStorage.removeItem("user");
+      localStorage.removeItem("profile");
+    }
   };
 
   const changePassword = (oldPass: string, newPass: string) => {
@@ -670,7 +755,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       changeUserRole,
       updateAppointmentStatus,
       createAdmin,
-      deleteAdmin
+      deleteAdmin,
+      setRealSession
     }}>
       {children}
     </AuthContext.Provider>

@@ -6,6 +6,10 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
+import { useVerifyEmail } from "../hooks/useVerifyEmail";
+import { getMe } from "../api/auth.api";
+import { useAuth } from "@/providers/authProvider";
+import { toast } from "sonner";
 import { Stethoscope, ShieldAlert, ArrowRight } from "lucide-react";
 
 const verifySchema = z.object({
@@ -20,25 +24,56 @@ export function VerifyEmailForm() {
   const email = searchParams.get("email") || "your email";
   
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  
+  const verifyEmailMutation = useVerifyEmail();
+  const { setRealSession } = useAuth();
 
   const {
     register,
     handleSubmit,
-    formState: { errors, isSubmitting }
+    formState: { errors }
   } = useForm<VerifyFormData>({
     resolver: zodResolver(verifySchema)
   });
 
   const onSubmit = async (data: VerifyFormData) => {
     setErrorMsg(null);
-    console.log("Verify OTP Request Payload:", { email, otp: data.code });
-    await new Promise(resolve => setTimeout(resolve, 1500));
+    try {
+      await verifyEmailMutation.mutateAsync({
+        email: email as string,
+        otp: data.code,
+      });
 
-    // Simulate OTP validation: accept 123456 as code or anything for mock
-    if (data.code === "123456" || data.code !== "") {
-      router.push(`/reset-password?email=${encodeURIComponent(email)}`);
-    } else {
-      setErrorMsg("Invalid or expired verification code. Use code 123456.");
+      toast.success("Email verified successfully!");
+
+      // Fetch fresh user profile if we have a token stored in localStorage
+      const savedToken = typeof window !== "undefined" ? localStorage.getItem("accessToken") : null;
+      if (savedToken) {
+        try {
+          const meResponse = await getMe();
+          if (meResponse && meResponse.success) {
+            const userData = meResponse.data;
+            let profile = null;
+            if (userData.role === "PATIENT") {
+              profile = userData.patient;
+            } else if (userData.role === "DOCTOR") {
+              profile = userData.doctor;
+            } else {
+              profile = userData.admin;
+            }
+            setRealSession(userData, profile);
+          }
+        } catch (meErr) {
+          console.error("Error fetching me after verification:", meErr);
+        }
+        router.push("/dashboard");
+      } else {
+        // Redirect to login if token is not set
+        router.push("/login");
+      }
+    } catch (err: any) {
+      setErrorMsg(err?.response?.data?.message || "Invalid or expired verification code.");
+      toast.error(err?.response?.data?.message || "Verification failed!");
     }
   };
 
@@ -59,8 +94,8 @@ export function VerifyEmailForm() {
           <h2 className="text-2xl font-extrabold text-slate-900 dark:text-white">
             Verify verification code
           </h2>
-          <p className="mt-1.5 text-xs text-slate-450 dark:text-slate-400">
-            We sent a 6-digit code to <span className="font-semibold text-slate-850 dark:text-white">{email}</span>. Use <span className="font-bold">123456</span> to simulate a valid verification.
+          <p className="mt-1.5 text-xs text-slate-450 dark:text-slate-400 font-medium">
+          Please enter the code below to verify your account. 
           </p>
         </div>
 
@@ -84,8 +119,8 @@ export function VerifyEmailForm() {
               required
               maxLength={6}
               {...register("code")}
-              placeholder="123456"
-              className="w-full text-center tracking-[0.5em] font-mono font-bold text-lg px-4 py-3 bg-slate-50 dark:bg-slate-800 dark:text-white rounded-xl border border-slate-200 dark:border-slate-700 focus:outline-hidden focus:border-primary transition-colors"
+              placeholder="••••••"
+              className="w-full text-center tracking-[0.5em] font-mono text-lg px-4 py-3 bg-slate-50 dark:bg-slate-800 dark:text-white rounded-xl border border-slate-200 dark:border-slate-700 focus:outline-hidden focus:border-primary transition-colors animate-none"
             />
             {errors.code && (
               <p className="text-[11px] text-destructive font-medium text-center">{errors.code.message}</p>
@@ -95,10 +130,10 @@ export function VerifyEmailForm() {
           {/* Submit CTA */}
           <button
             type="submit"
-            disabled={isSubmitting}
+            disabled={verifyEmailMutation.isPending}
             className="w-full bg-primary hover:bg-primary/95 text-white py-3.5 rounded-xl text-xs font-bold shadow-md shadow-primary/10 transition-colors flex items-center justify-center gap-2 cursor-pointer disabled:cursor-not-allowed"
           >
-            {isSubmitting ? (
+            {verifyEmailMutation.isPending ? (
               <>
                 <div className="h-3.5 w-3.5 border-2 border-white/20 border-t-white rounded-full animate-spin" />
                 Verifying Code...

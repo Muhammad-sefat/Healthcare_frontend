@@ -1,22 +1,30 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
+import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Stethoscope, User, Mail, Lock, ArrowRight } from "lucide-react";
+import { Stethoscope, User, Mail, Lock, ArrowRight, Eye, EyeOff } from "lucide-react";
 import { registerSchema } from "../validation/register.schema";
 import { RegisterSchema } from "../types/auth.type";
 import { useRegister } from "../hooks/useRegister";
 import { toast } from "sonner";
+import { loginSuccess } from "@/redux/slices/authSlice";
+import { useAppDispatch } from "@/redux/hooks";
+import { useAuth } from "@/providers/authProvider";
 
 export function RegisterForm() {
   const router = useRouter();
+  const dispatch = useAppDispatch();
   const registerMutation = useRegister();
+  const { setRealSession } = useAuth();
+  const [showPassword, setShowPassword] = useState(false);
 
   const {
     register: formRegister,
     handleSubmit,
+    watch,
     formState: { errors },
   } = useForm<RegisterSchema>({
     resolver: zodResolver(registerSchema),
@@ -24,8 +32,11 @@ export function RegisterForm() {
       name: "",
       email: "",
       password: "",
+      role: "PATIENT",
     },
   });
+
+  const selectedRole = watch("role");
 
   const onSubmit = async (data: RegisterSchema) => {
     try {
@@ -33,14 +44,22 @@ export function RegisterForm() {
         name: data.name,
         email: data.email,
         password: data.password,
+        role: data.role,
       });
 
-      toast.success(response.message || "Account created successfully!");
+      dispatch(
+        loginSuccess({
+          user: response.data.user,
+          accessToken: response.data.accessToken,
+          refreshToken: response.data.refreshToken,
+        }),
+      );
 
-      // Wait 1.5 seconds so the user can read the toast
-      setTimeout(() => {
-        router.push("/dashboard");
-      }, 1500);
+      setRealSession(response.data.user, response.data.patient);
+
+      toast.success(response.message);
+
+      router.push(`/verify-email?email=${encodeURIComponent(data.email)}`);
     } catch (error: any) {
       toast.error(error?.response?.data?.message || "Something went wrong!");
     }
@@ -125,15 +144,85 @@ export function RegisterForm() {
             <div className="relative">
               <Lock className="absolute left-3.5 top-3.5 h-4.5 w-4.5 text-slate-400" />
               <input
-                type="password"
+                type={showPassword ? "text" : "password"}
                 {...formRegister("password")}
                 placeholder="••••••••"
-                className="w-full pl-11 pr-4 py-3 bg-slate-50 dark:bg-slate-800 dark:text-white rounded-xl border border-slate-200 dark:border-slate-700 text-sm focus:outline-hidden focus:border-primary transition-colors"
+                className="w-full pl-11 pr-11 py-3 bg-slate-50 dark:bg-slate-800 dark:text-white rounded-xl border border-slate-200 dark:border-slate-700 text-sm focus:outline-hidden focus:border-primary transition-colors"
               />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3.5 top-3.5 text-slate-450 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-350 cursor-pointer focus:outline-hidden"
+              >
+                {showPassword ? (
+                  <Eye className="h-4.5 w-4.5" />
+                ) : (
+                  <EyeOff className="h-4.5 w-4.5" />
+                )}
+              </button>
             </div>
             {errors.password && (
               <p className="text-[11px] text-destructive font-medium">
                 {errors.password.message}
+              </p>
+            )}
+          </div>
+
+          {/* Role Radio Group Input */}
+          <div className="space-y-2">
+            <label className="block text-xs font-bold text-slate-455 dark:text-slate-550 uppercase tracking-wider">
+              Register As
+            </label>
+            <div className="grid grid-cols-3 gap-3">
+              <label
+                className={`flex items-center justify-center p-3 bg-slate-50 dark:bg-slate-800 rounded-xl border cursor-pointer hover:border-primary dark:hover:border-primary transition-all text-xs font-bold ${
+                  selectedRole === "PATIENT"
+                    ? "border-primary bg-primary/5 text-primary dark:bg-primary/10"
+                    : "border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-350"
+                }`}
+              >
+                <input
+                  type="radio"
+                  value="PATIENT"
+                  {...formRegister("role")}
+                  className="sr-only"
+                />
+                Patient
+              </label>
+              <label
+                className={`flex items-center justify-center p-3 bg-slate-50 dark:bg-slate-800 rounded-xl border cursor-pointer hover:border-primary dark:hover:border-primary transition-all text-xs font-bold ${
+                  selectedRole === "DOCTOR"
+                    ? "border-primary bg-primary/5 text-primary dark:bg-primary/10"
+                    : "border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-350"
+                }`}
+              >
+                <input
+                  type="radio"
+                  value="DOCTOR"
+                  {...formRegister("role")}
+                  className="sr-only"
+                />
+                Doctor
+              </label>
+              <label
+                className={`flex items-center justify-center p-3 bg-slate-50 dark:bg-slate-800 rounded-xl border cursor-pointer hover:border-primary dark:hover:border-primary transition-all text-xs font-bold ${
+                  selectedRole === "ADMIN"
+                    ? "border-primary bg-primary/5 text-primary dark:bg-primary/10"
+                    : "border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-350"
+                }`}
+              >
+                <input
+                  type="radio"
+                  value="ADMIN"
+                  {...formRegister("role")}
+                  className="sr-only"
+                />
+                Admin
+              </label>
+            </div>
+            {errors.role && (
+              <p className="text-[11px] text-destructive font-medium">
+                {errors.role.message}
               </p>
             )}
           </div>

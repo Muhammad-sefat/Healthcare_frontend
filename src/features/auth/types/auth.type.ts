@@ -9,15 +9,35 @@ export interface RegisterRequest {
   name: string;
   email: string;
   password: string;
+  role: "ADMIN" | "PATIENT" | "DOCTOR";
 }
 
-// Example response type
+export interface User {
+  id: string;
+  name: string;
+  email: string;
+  role: string;
+  status: string;
+  image: string | null;
+}
+
+export interface Patient {
+  id: string;
+  name: string;
+  email: string;
+  profilePhoto: string | null;
+  contactNumber: string | null;
+  address: string | null;
+  userId: string;
+}
+
 export interface RegisterResponse {
   success: boolean;
   message: string;
   data: {
-    id: string;
-    name: string;
-    email: string;
+    user: User;
+    patient: Patient;
+    accessToken: string;
+    refreshToken: string;
   };
 }
