@@ -3,13 +3,15 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useAuth } from "@/providers/authProvider";
+import { useSpecialties } from "@/features/landing/hooks/useSpecialties";
 import { motion } from "framer-motion";
-import { Search, ArrowRight, CheckCircle2, TrendingUp } from "lucide-react";
+import { Search, ArrowRight, CheckCircle2, TrendingUp, ChevronDown } from "lucide-react";
 
 export function HeroSection() {
   const router = useRouter();
-  const { specialties } = useAuth();
+  const { data: specialtiesResponse } = useSpecialties();
+  const specialtiesData = specialtiesResponse?.data || [];
+  const [dropdownOpen, setDropdownOpen] = useState(false);
   
   // Search state
   const [searchName, setSearchName] = useState("");
@@ -75,17 +77,58 @@ export function HeroSection() {
                     className="w-full pl-10 pr-4 py-3 bg-slate-50 dark:bg-slate-800 dark:text-white rounded-xl border border-slate-200 dark:border-slate-700 text-sm focus:outline-hidden focus:border-primary transition-colors"
                   />
                 </div>
-                <div className="sm:w-52">
-                  <select
-                    value={selectedSpecialty}
-                    onChange={(e) => setSelectedSpecialty(e.target.value)}
-                    className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 dark:text-white rounded-xl border border-slate-200 dark:border-slate-700 text-sm focus:outline-hidden focus:border-primary transition-colors appearance-none cursor-pointer"
+                <div className="relative sm:w-52">
+                  <button
+                    type="button"
+                    onClick={() => setDropdownOpen(!dropdownOpen)}
+                    className="w-full flex items-center justify-between px-4 py-3 bg-slate-50 dark:bg-slate-800 dark:text-white rounded-xl border border-slate-200 dark:border-slate-700 text-sm focus:outline-hidden focus:border-primary transition-colors cursor-pointer"
                   >
-                    <option value="">Select Specialty</option>
-                    {specialties.map(spec => (
-                      <option key={spec.id} value={spec.id}>{spec.title}</option>
-                    ))}
-                  </select>
+                    <span className={selectedSpecialty ? "text-slate-900 dark:text-white" : "text-slate-400"}>
+                      {selectedSpecialty 
+                        ? specialtiesData?.find(s => s.id === selectedSpecialty)?.title 
+                        : "Select Specialty"}
+                    </span>
+                    <ChevronDown className={`h-4 w-4 text-slate-400 transition-transform ${dropdownOpen ? "rotate-180" : ""}`} />
+                  </button>
+                  
+                  {dropdownOpen && (
+                    <>
+                      <div 
+                        className="fixed inset-0 z-10" 
+                        onClick={() => setDropdownOpen(false)}
+                      />
+                      <div className="absolute left-0 right-0 mt-2 bg-white dark:bg-slate-900 border border-slate-150 dark:border-slate-800 rounded-xl shadow-xl z-20 max-h-60 overflow-y-auto py-1.5">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setSelectedSpecialty("");
+                            setDropdownOpen(false);
+                          }}
+                          className="w-full text-left px-4 py-2 text-sm text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
+                        >
+                          Select Specialty
+                        </button>
+                        {specialtiesData?.map(spec => (
+                          <button
+                            key={spec.id}
+                            type="button"
+                            onClick={() => {
+                              setSelectedSpecialty(spec.id);
+                              setDropdownOpen(false);
+                            }}
+                            className={`w-full text-left px-4 py-2.5 text-sm transition-colors hover:bg-slate-50 dark:hover:bg-slate-800 flex items-center gap-2 ${
+                              selectedSpecialty === spec.id
+                                ? "text-primary font-bold bg-primary/5 dark:bg-primary/10"
+                                : "text-slate-700 dark:text-slate-350"
+                            }`}
+                          >
+                            <img src={spec.icon} alt={spec.title} className="h-4.5 w-4.5 object-contain opacity-75 animate-none" />
+                            {spec.title}
+                          </button>
+                        ))}
+                      </div>
+                    </>
+                  )}
                 </div>
                 <button
                   type="submit"
