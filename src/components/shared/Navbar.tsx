@@ -4,10 +4,25 @@ import React, { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useAuth } from "@/providers/authProvider";
-import { Stethoscope, LogOut, Menu, X, ArrowRight } from "lucide-react";
+import { Stethoscope, LogOut, Menu, X, ArrowRight, User, LayoutDashboard } from "lucide-react";
+import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
 
 export default function Navbar() {
-  const { currentUser, logout } = useAuth();
+  const { currentUser, logout, currentProfile } = useAuth();
+
+  const getInitials = (name?: string) => {
+    if (!name) return "";
+    return name
+      .split(" ")
+      .map((n) => n[0])
+      .join("")
+      .toUpperCase()
+      .slice(0, 2);
+  };
+
+  const userName = currentProfile?.name || (currentUser as any)?.name || "User";
+  const userEmail = currentProfile?.email || currentUser?.email || "";
+
   const pathname = usePathname();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
@@ -41,7 +56,7 @@ export default function Navbar() {
             </div>
 
             {/* Desktop Navigation */}
-            <nav className="hidden md:flex space-x-1 lg:space-x-4">
+            <nav className="hidden md:flex space-x-1 lg:space-x-3">
               {navLinks.map((link) => {
                 const isActive = pathname === link.href;
                 return (
@@ -63,22 +78,75 @@ export default function Navbar() {
             {/* Auth Actions */}
             <div className="hidden md:flex items-center gap-4">
               {currentUser ? (
-                <div className="flex items-center gap-3">
-                  <Link
-                    href="/dashboard"
-                    className="flex items-center gap-2 bg-primary text-white hover:bg-primary/95 px-5 py-2.5 rounded-xl text-sm font-medium shadow-md shadow-primary/20 hover:shadow-lg hover:shadow-primary/30 transition-all duration-200"
-                  >
-                    Go to Dashboard
-                    <ArrowRight className="h-4 w-4" />
-                  </Link>
-                  <button
-                    onClick={logout}
-                    title="Log Out"
-                    className="p-2.5 rounded-xl border cursor-pointer border-slate-200 hover:bg-slate-50 text-slate-500 hover:text-slate-700 dark:border-slate-800 dark:hover:bg-slate-800 dark:hover:text-white transition-all"
-                  >
-                    <LogOut className="h-4 w-4" />
-                  </button>
-                </div>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <button className="relative flex items-center justify-center h-10 w-10 rounded-full border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800 hover:ring-2 hover:ring-primary/20 transition-all duration-200 cursor-pointer overflow-hidden group">
+                      {currentProfile?.profilePhoto ? (
+                        <img
+                          src={currentProfile.profilePhoto}
+                          alt={userName || "Profile"}
+                          className="h-full w-full rounded-full object-cover group-hover:scale-105 transition-transform duration-200"
+                        />
+                      ) : (
+                        <span className="text-sm font-semibold text-slate-700 dark:text-slate-200">
+                          {getInitials(userName) || <User className="h-5 w-5 text-slate-500" />}
+                        </span>
+                      )}
+                    </button>
+                  </PopoverTrigger>
+                  <PopoverContent align="end" className="w-64 p-3 bg-white dark:bg-slate-900 border border-slate-150 dark:border-slate-800 rounded-2xl shadow-xl z-50">
+                    <div className="flex flex-col gap-3">
+                      {/* User Info Header */}
+                      <div className="flex items-center gap-3 px-2 py-1.5">
+                        <div className="flex items-center justify-center h-10 w-10 rounded-full bg-primary/10 text-primary font-semibold shrink-0">
+                          {currentProfile?.profilePhoto ? (
+                            <img
+                              src={currentProfile.profilePhoto}
+                              alt={userName || "Profile"}
+                              className="h-full w-full rounded-full object-cover"
+                            />
+                          ) : (
+                            getInitials(userName) || <User className="h-5 w-5" />
+                          )}
+                        </div>
+                        <div className="flex flex-col min-w-0">
+                          <p className="text-sm font-semibold text-slate-900 dark:text-white truncate">
+                            {userName}
+                          </p>
+                          <p className="text-xs text-slate-500 dark:text-slate-400 truncate">
+                            {userEmail}
+                          </p>
+                          {currentUser?.role && (
+                            <span className="mt-1 inline-flex items-center self-start px-2 py-0.5 rounded-full text-[10px] font-semibold bg-primary/10 text-primary dark:bg-primary/20 dark:text-primary-foreground/90 uppercase tracking-wider">
+                              {currentUser.role.toLowerCase().replace("_", " ")}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                      
+                      <hr className="border-slate-150 dark:border-slate-800" />
+                      
+                      {/* Menu Actions */}
+                      <div className="flex flex-col gap-1">
+                        <Link
+                          href="/dashboard"
+                          className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-sm font-medium text-slate-700 hover:bg-slate-50 hover:text-slate-900 dark:text-slate-350 dark:hover:bg-slate-850 dark:hover:text-white transition-all"
+                        >
+                          <LayoutDashboard className="h-4.5 w-4.5 text-slate-500" />
+                          Dashboard
+                        </Link>
+                        
+                        <button
+                          onClick={logout}
+                          className="flex items-center gap-2.5 w-full text-left px-3 py-2 rounded-xl text-sm font-medium text-red-650 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950/30 transition-all cursor-pointer"
+                        >
+                          <LogOut className="h-4.5 w-4.5" />
+                          Log Out
+                        </button>
+                      </div>
+                    </div>
+                  </PopoverContent>
+                </Popover>
               ) : (
                 <div className="flex items-center gap-2">
                   <Link
