@@ -3,7 +3,7 @@
 
 import React, { Suspense } from "react";
 import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { useAuth } from "@/providers/authProvider";
 import { Role } from "@/types";
 import {
@@ -153,7 +153,12 @@ export function DashboardSidebar({
 
   const handleTabClick = (tab: string) => {
     setSidebarOpen(false);
-    router.push(`/dashboard?tab=${tab}`);
+    const rolePath = activeRole.toLowerCase().replace("_", "-");
+    if (tab === "overview") {
+      router.push(`/dashboard/${rolePath}`);
+    } else {
+      router.push(`/dashboard/${rolePath}/${tab}`);
+    }
   };
 
   const getRoleBadgeColor = (role: Role) => {
@@ -311,13 +316,14 @@ interface SidebarNavProps {
 }
 
 function SidebarNav({ menuLinks, handleTabClick }: SidebarNavProps) {
-  const searchParams = useSearchParams();
-  const activeTab = searchParams.get("tab") || "overview";
+  const pathname = usePathname();
 
   return (
     <nav className="flex-1 px-4 py-6 space-y-1.5 overflow-y-auto">
       {menuLinks.map((link, idx) => {
-        const isActive = activeTab === link.tab;
+        const isActive = link.tab === "overview"
+          ? pathname.endsWith("/patient") || pathname.endsWith("/doctor") || pathname.endsWith("/admin") || pathname.endsWith("/super-admin")
+          : pathname.endsWith(`/${link.tab}`);
         return (
           <button
             key={idx}
