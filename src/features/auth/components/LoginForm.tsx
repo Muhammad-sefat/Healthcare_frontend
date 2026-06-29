@@ -56,10 +56,12 @@ export function LoginForm() {
         password: data.password,
       });
 
+      const loggedInUser = response.data.result.user;
+
       // Dispatch token & user to Redux and localstorage
       dispatch(
         loginSuccess({
-          user: response.data.user,
+          user: loggedInUser,
           accessToken: response.data.accessToken,
           refreshToken: response.data.refreshToken,
         }),
@@ -79,7 +81,7 @@ export function LoginForm() {
         }
       }
 
-      setRealSession(response.data.user, profile);
+      setRealSession(loggedInUser, profile);
 
       toast.success(response.message || "Signed in successfully!");
 

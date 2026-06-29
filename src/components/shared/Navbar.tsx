@@ -1,11 +1,25 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @next/next/no-img-element */
 "use client";
 
-import React, { useState } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useAuth } from "@/providers/authProvider";
-import { Stethoscope, LogOut, Menu, X, ArrowRight, User, LayoutDashboard } from "lucide-react";
-import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
+import {
+  Stethoscope,
+  LogOut,
+  Menu,
+  X,
+  ArrowRight,
+  User,
+  LayoutDashboard,
+} from "lucide-react";
+import {
+  Popover,
+  PopoverTrigger,
+  PopoverContent,
+} from "@/components/ui/popover";
 
 export default function Navbar() {
   const { currentUser, logout, currentProfile } = useAuth();
@@ -89,12 +103,17 @@ export default function Navbar() {
                         />
                       ) : (
                         <span className="text-sm font-semibold text-slate-700 dark:text-slate-200">
-                          {getInitials(userName) || <User className="h-5 w-5 text-slate-500" />}
+                          {getInitials(userName) || (
+                            <User className="h-5 w-5 text-slate-500" />
+                          )}
                         </span>
                       )}
                     </button>
                   </PopoverTrigger>
-                  <PopoverContent align="end" className="w-64 p-3 bg-white dark:bg-slate-900 border border-slate-150 dark:border-slate-800 rounded-2xl shadow-xl z-50">
+                  <PopoverContent
+                    align="end"
+                    className="w-64 p-3 bg-white dark:bg-slate-900 border border-slate-150 dark:border-slate-800 rounded-2xl shadow-xl z-50"
+                  >
                     <div className="flex flex-col gap-3">
                       {/* User Info Header */}
                       <div className="flex items-center gap-3 px-2 py-1.5">
@@ -106,7 +125,9 @@ export default function Navbar() {
                               className="h-full w-full rounded-full object-cover"
                             />
                           ) : (
-                            getInitials(userName) || <User className="h-5 w-5" />
+                            getInitials(userName) || (
+                              <User className="h-5 w-5" />
+                            )
                           )}
                         </div>
                         <div className="flex flex-col min-w-0">
@@ -123,9 +144,9 @@ export default function Navbar() {
                           )}
                         </div>
                       </div>
-                      
+
                       <hr className="border-slate-150 dark:border-slate-800" />
-                      
+
                       {/* Menu Actions */}
                       <div className="flex flex-col gap-1">
                         <Link
@@ -135,7 +156,7 @@ export default function Navbar() {
                           <LayoutDashboard className="h-4.5 w-4.5 text-slate-500" />
                           Dashboard
                         </Link>
-                        
+
                         <button
                           onClick={logout}
                           className="flex items-center gap-2.5 w-full text-left px-3 py-2 rounded-xl text-sm font-medium text-red-650 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950/30 transition-all cursor-pointer"

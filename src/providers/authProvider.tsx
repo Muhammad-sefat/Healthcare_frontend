@@ -1,35 +1,34 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import React, { createContext, useContext, useState, useEffect } from "react";
-import { 
-  Role, 
-  UserStatus, 
-  Gender, 
-  BloodGroup, 
-  AppointmentStatus, 
-  PaymentStatus, 
-  Doctor, 
-  Patient, 
-  Appointment, 
-  Prescription, 
-  Review, 
-  Specialty, 
+import {
+  Role,
+  UserStatus,
+  AppointmentStatus,
+  PaymentStatus,
+  Doctor,
+  Patient,
+  Appointment,
+  Prescription,
+  Review,
+  Specialty,
   Schedule,
   Admin,
   User,
-  PatientHealthData
+  PatientHealthData,
 } from "@/types";
-import { 
-  mockDoctors, 
-  mockPatient, 
-  mockAppointments, 
-  mockPrescriptions, 
-  mockReviews, 
-  mockSpecialties, 
-  mockSystemSchedules, 
+import {
+  mockDoctors,
+  mockPatient,
+  mockAppointments,
+  mockPrescriptions,
+  mockReviews,
+  mockSpecialties,
+  mockSystemSchedules,
   mockAdmins,
   mockUsers,
-  mockDoctorSchedules 
+  mockDoctorSchedules,
 } from "@/constants/mockData";
 import { getMe } from "@/features/auth/api/auth.api";
 
@@ -47,23 +46,28 @@ interface AuthContextType {
   reviews: Review[];
   admins: Admin[];
   needsPasswordChange: boolean;
-  
+
   // Auth Functions
-  login: (email: string, role: Role) => boolean;
-  register: (name: string, email: string) => void;
   logout: () => void;
   changePassword: (oldPass: string, newPass: string) => void;
   switchRole: (role: Role) => void;
 
   // Actions
-  updatePatientProfile: (profile: Partial<Patient>, healthData: Partial<PatientHealthData>) => void;
+  updatePatientProfile: (
+    profile: Partial<Patient>,
+    healthData: Partial<PatientHealthData>,
+  ) => void;
   uploadMedicalReport: (fileName: string) => void;
   deleteMedicalReport: (reportId: string) => void;
-  
+
   claimSlot: (scheduleId: string) => void;
   releaseSlot: (scheduleId: string) => void;
-  
-  bookAppointment: (doctorId: string, scheduleId: string, payNow: boolean) => void;
+
+  bookAppointment: (
+    doctorId: string,
+    scheduleId: string,
+    payNow: boolean,
+  ) => void;
   cancelAppointment: (appointmentId: string) => void;
   initiatePayment: (appointmentId: string) => void;
   addReview: (appointmentId: string, rating: number, comment: string) => void;
@@ -71,13 +75,25 @@ interface AuthContextType {
   // Doctor actions
   startConsultation: (appointmentId: string) => void;
   completeAppointment: (appointmentId: string) => void;
-  writePrescription: (appointmentId: string, instructions: string, followUpDate: string) => void;
+  writePrescription: (
+    appointmentId: string,
+    instructions: string,
+    followUpDate: string,
+  ) => void;
 
   // Admin actions
   addSpecialty: (title: string, description: string, icon: string) => void;
   deleteSpecialty: (specialtyId: string) => void;
-  generateSchedules: (startDate: string, endDate: string, startTime: string, endTime: string) => void;
-  registerDoctor: (doctor: Omit<Doctor, "id" | "averageRating" | "isDeleted" | "specialties">, specialtyIds: string[]) => void;
+  generateSchedules: (
+    startDate: string,
+    endDate: string,
+    startTime: string,
+    endTime: string,
+  ) => void;
+  registerDoctor: (
+    doctor: Omit<Doctor, "id" | "averageRating" | "isDeleted" | "specialties">,
+    specialtyIds: string[],
+  ) => void;
   updateDoctor: (id: string, updatedFields: Partial<Doctor>) => void;
   deleteDoctor: (id: string) => void;
   changeUserStatus: (userId: string, status: UserStatus) => void;
@@ -85,45 +101,112 @@ interface AuthContextType {
   updateAppointmentStatus: (id: string, status: AppointmentStatus) => void;
 
   // Super Admin actions
-  createAdmin: (name: string, email: string, contactNumber: string, role: Role) => void;
+  createAdmin: (
+    name: string,
+    email: string,
+    contactNumber: string,
+    role: Role,
+  ) => void;
   deleteAdmin: (adminId: string) => void;
   setRealSession: (user: any, profile: any) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
+  children,
+}) => {
   // Database state stored in local state for reactive updates during demo session
   const [users, setUsers] = useState<typeof mockUsers>(mockUsers);
   const [doctors, setDoctors] = useState<Doctor[]>(mockDoctors);
   const [patients, setPatients] = useState<Patient[]>([mockPatient]);
-  const [appointments, setAppointments] = useState<Appointment[]>(mockAppointments);
+  const [appointments, setAppointments] =
+    useState<Appointment[]>(mockAppointments);
   const [specialties, setSpecialties] = useState<Specialty[]>(mockSpecialties);
   const [schedules, setSchedules] = useState<Schedule[]>(mockSystemSchedules);
-  const [prescriptions, setPrescriptions] = useState<Prescription[]>(mockPrescriptions);
+  const [prescriptions, setPrescriptions] =
+    useState<Prescription[]>(mockPrescriptions);
   const [reviews, setReviews] = useState<Review[]>(mockReviews);
   const [admins, setAdmins] = useState<Admin[]>(mockAdmins);
 
-  // Authentication status
-  const [currentUser, setCurrentUser] = useState<User | null>(null);
-  const [activeRole, setActiveRole] = useState<Role | null>(null);
-  const [currentProfile, setCurrentProfile] = useState<Patient | Doctor | Admin | null>(null);
-  const [needsPasswordChange, setNeedsPasswordChange] = useState(false);
+  // Authentication status - initialized instantly from localStorage to avoid flickering/vanishing on page reload
+  const [currentUser, setCurrentUser] = useState<User | null>(() => {
+    if (typeof window !== "undefined") {
+      const userStr = localStorage.getItem("user");
+      return userStr ? JSON.parse(userStr) : null;
+    }
+    return null;
+  });
+  const [activeRole, setActiveRole] = useState<Role | null>(() => {
+    if (typeof window !== "undefined") {
+      const userStr = localStorage.getItem("user");
+      if (userStr) {
+        try {
+          return JSON.parse(userStr).role as Role;
+        } catch {
+          return null;
+        }
+      }
+    }
+    return null;
+  });
+  const [currentProfile, setCurrentProfile] = useState<
+    Patient | Doctor | Admin | null
+  >(() => {
+    if (typeof window !== "undefined") {
+      const profileStr = localStorage.getItem("profile");
+      return profileStr ? JSON.parse(profileStr) : null;
+    }
+    return null;
+  });
+  const [needsPasswordChange, setNeedsPasswordChange] = useState(() => {
+    if (typeof window !== "undefined") {
+      const userStr = localStorage.getItem("user");
+      if (userStr) {
+        try {
+          return JSON.parse(userStr).needsPasswordChange || false;
+        } catch {
+          return false;
+        }
+      }
+    }
+    return false;
+  });
 
-  // Auto-login to Patient role initially to make standard dashboard review easy or restore real session
+  // Keep state in sync with localStorage and verify credentials with backend in the background
   useEffect(() => {
-    const savedToken = typeof window !== "undefined" ? localStorage.getItem("accessToken") : null;
-    const savedUserStr = typeof window !== "undefined" ? localStorage.getItem("user") : null;
-    const savedProfileStr = typeof window !== "undefined" ? localStorage.getItem("profile") : null;
+    const savedToken =
+      typeof window !== "undefined"
+        ? localStorage.getItem("accessToken")
+        : null;
+    const savedUserStr =
+      typeof window !== "undefined" ? localStorage.getItem("user") : null;
+    const savedProfileStr =
+      typeof window !== "undefined" ? localStorage.getItem("profile") : null;
 
     const restoreSession = async () => {
+      // 1. Instantly parse local state to avoid flash of loading state if state initialized empty
+      if (savedUserStr && savedProfileStr) {
+        try {
+          const user = JSON.parse(savedUserStr);
+          const profile = JSON.parse(savedProfileStr);
+          setCurrentUser(user);
+          setActiveRole(user.role);
+          setCurrentProfile(profile);
+        } catch (e) {
+          console.error("Error parsing stored session:", e);
+        }
+      }
+
+      // 2. Perform background network check to verify and sync with latest server state
       if (savedToken) {
         try {
-          // Fetch the latest profile data using the getMe API function
-          console.log("%c[Auth] Fetching profile from backend `/auth/me`...", "color: #0284c7; font-weight: bold;");
+          console.log(
+            "%c[Auth] Syncing profile with backend `/auth/me`...",
+            "color: #0284c7; font-weight: bold;",
+          );
           const response = await getMe();
-          console.log("%c[Auth] Successfully fetched profile from backend:", "color: #16a34a; font-weight: bold;", response);
-          
+
           if (response && response.success) {
             const userData = response.data;
             const user = {
@@ -136,13 +219,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               createdAt: userData.createdAt,
               updatedAt: userData.updatedAt,
             };
-            
+
             let profile = null;
             if (user.role === Role.PATIENT) {
               profile = userData.patient;
             } else if (user.role === Role.DOCTOR) {
               profile = userData.doctor;
-            } else if (user.role === Role.ADMIN || user.role === Role.SUPER_ADMIN) {
+            } else if (
+              user.role === Role.ADMIN ||
+              user.role === Role.SUPER_ADMIN
+            ) {
               profile = userData.admin;
             }
 
@@ -155,26 +241,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               localStorage.setItem("user", JSON.stringify(user));
               localStorage.setItem("profile", JSON.stringify(profile));
             }
-            return;
           }
         } catch (err) {
-          console.error("Failed to fetch fresh user profile from backend:", err);
-          // If token expired, log out
-          logout();
-        }
-      }
-
-      // Fallback to local storage if API fetch fails or isn't executed
-      if (savedUserStr && savedProfileStr) {
-        try {
-          const user = JSON.parse(savedUserStr);
-          const profile = JSON.parse(savedProfileStr);
-          setCurrentUser(user);
-          setActiveRole(user.role);
-          setCurrentProfile(profile);
-          return;
-        } catch (e) {
-          console.error("Error parsing stored session:", e);
+          console.error(
+            "Failed to fetch fresh user profile from backend:",
+            err,
+          );
         }
       }
     };
@@ -185,118 +257,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const setRealSession = (user: any, profile: any) => {
     setCurrentUser(user);
     setCurrentProfile(profile);
-    setActiveRole(user.role);
-    setNeedsPasswordChange(user.needsPasswordChange || false);
+    setActiveRole(user?.role || null);
+    setNeedsPasswordChange(user?.needsPasswordChange || false);
     if (typeof window !== "undefined") {
-      localStorage.setItem("profile", JSON.stringify(profile));
+      if (user) localStorage.setItem("user", JSON.stringify(user));
+      if (profile) localStorage.setItem("profile", JSON.stringify(profile));
     }
-  };
-
-  function login(email: string, role: Role): boolean {
-    // Find matching user or fallback
-    const existingUser = users.find(u => u.email === email && u.role === role);
-    
-    let mockUserObj: User;
-    if (existingUser) {
-      mockUserObj = {
-        id: existingUser.id,
-        email: existingUser.email,
-        role: existingUser.role,
-        status: existingUser.status as UserStatus,
-        needsPasswordChange: existingUser.needsPasswordChange,
-        createdAt: existingUser.createdAt,
-        updatedAt: existingUser.updatedAt
-      };
-    } else {
-      // Create dynamically if not found
-      mockUserObj = {
-        id: `user-${role.toLowerCase()}-${Math.floor(Math.random() * 1000)}`,
-        email,
-        role,
-        status: UserStatus.ACTIVE,
-        needsPasswordChange: false,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
-      };
-      setUsers(prev => [...prev, {
-        ...mockUserObj,
-        needsPasswordChange: false
-      }]);
-    }
-
-    if (mockUserObj.status === UserStatus.BLOCKED) {
-      return false; // Cannot log in if blocked
-    }
-
-    setCurrentUser(mockUserObj);
-    setActiveRole(role);
-    setNeedsPasswordChange(mockUserObj.needsPasswordChange);
-
-    // Fetch corresponding profile
-    if (role === Role.PATIENT) {
-      const pat = patients.find(p => p.email === email) || patients[0];
-      setCurrentProfile(pat);
-    } else if (role === Role.DOCTOR) {
-      const doc = doctors.find(d => d.email === email) || doctors[0];
-      setCurrentProfile(doc);
-    } else {
-      const adm = admins.find(a => a.email === email) || admins[0];
-      setCurrentProfile(adm);
-    }
-
-    return true;
-  }
-
-  const register = (name: string, email: string) => {
-    const patientId = `patient-uuid-${Math.floor(Math.random() * 1000)}`;
-    const newPatient: Patient = {
-      id: patientId,
-      name,
-      email,
-      contactNumber: "",
-      address: "",
-      isDeleted: false,
-      patientHealthData: {
-        id: `health-uuid-${Math.floor(Math.random() * 1000)}`,
-        gender: Gender.MALE,
-        dateOfBirth: new Date().toISOString(),
-        bloodGroup: BloodGroup.O_POSITIVE,
-        hasAllergies: false,
-        hasDiabetes: false,
-        height: "5 feet 8 inches",
-        weight: "70 kg",
-        smokingStatus: false,
-        dietaryPreferences: "None",
-        pregnancyStatus: false,
-        mentalHealthHistory: "",
-        immunizationStatus: "None",
-        hasPastSurgeries: false,
-        recentAnxiety: false,
-        recentDepression: false,
-        maritalStatus: "Single"
-      },
-      medicalReports: []
-    };
-
-    setPatients(prev => [...prev, newPatient]);
-    
-    // Add to User list
-    const newUser = {
-      id: `user-patient-${Math.floor(Math.random() * 1000)}`,
-      email,
-      role: Role.PATIENT,
-      status: UserStatus.ACTIVE,
-      needsPasswordChange: false,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
-    };
-    setUsers(prev => [...prev, newUser]);
-    
-    // Auto login as new Patient
-    setCurrentUser(newUser);
-    setActiveRole(Role.PATIENT);
-    setCurrentProfile(newPatient);
-    setNeedsPasswordChange(false);
   };
 
   const logout = () => {
@@ -312,88 +278,82 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const changePassword = (oldPass: string, newPass: string) => {
+  const changePassword = () => {
     if (currentUser) {
       setNeedsPasswordChange(false);
-      setCurrentUser(prev => prev ? { ...prev, needsPasswordChange: false } : null);
-      setUsers(prev => prev.map(u => u.email === currentUser.email ? { ...u, needsPasswordChange: false } : u));
+      setCurrentUser((prev) =>
+        prev ? { ...prev, needsPasswordChange: false } : null,
+      );
     }
   };
 
   const switchRole = (role: Role) => {
-    // Switch active role instantly for development review
     setActiveRole(role);
-    if (role === Role.PATIENT) {
-      const pat = patients[0];
-      setCurrentProfile(pat);
-      setCurrentUser(prev => prev ? { ...prev, email: pat.email, role: Role.PATIENT } : null);
-    } else if (role === Role.DOCTOR) {
-      const doc = doctors[0];
-      setCurrentProfile(doc);
-      setCurrentUser(prev => prev ? { ...prev, email: doc.email, role: Role.DOCTOR } : null);
-    } else if (role === Role.ADMIN) {
-      const adm = admins.find(a => a.email.includes("admin.alex")) || admins[0];
-      setCurrentProfile(adm);
-      setCurrentUser(prev => prev ? { ...prev, email: adm.email, role: Role.ADMIN } : null);
-    } else if (role === Role.SUPER_ADMIN) {
-      const adm = admins.find(a => a.email.includes("super.sefat")) || admins[1] || admins[0];
-      setCurrentProfile(adm);
-      setCurrentUser(prev => prev ? { ...prev, email: adm.email, role: Role.SUPER_ADMIN } : null);
-    }
   };
 
   // ----------------------------------------------------
   // Patients Actions
   // ----------------------------------------------------
-  const updatePatientProfile = (profile: Partial<Patient>, healthData: Partial<PatientHealthData>) => {
-    setPatients(prev => prev.map(p => {
-      if (p.id === currentProfile?.id) {
-        const updated = {
-          ...p,
-          ...profile,
-          patientHealthData: {
-            ...p.patientHealthData,
-            ...healthData
-          }
-        } as Patient;
-        setCurrentProfile(updated);
-        return updated;
-      }
-      return p;
-    }));
+  const updatePatientProfile = (
+    profile: Partial<Patient>,
+    healthData: Partial<PatientHealthData>,
+  ) => {
+    setPatients((prev) =>
+      prev.map((p) => {
+        if (p.id === currentProfile?.id) {
+          const updated = {
+            ...p,
+            ...profile,
+            patientHealthData: {
+              ...p.patientHealthData,
+              ...healthData,
+            },
+          } as Patient;
+          setCurrentProfile(updated);
+          return updated;
+        }
+        return p;
+      }),
+    );
   };
 
   const uploadMedicalReport = (fileName: string) => {
     if (activeRole !== Role.PATIENT) return;
-    setPatients(prev => prev.map(p => {
-      if (p.id === currentProfile?.id) {
-        const newReports = [
-          ...(p.medicalReports || []),
-          {
-            id: `rep-uuid-${Math.floor(Math.random() * 1000)}`,
-            reportName: fileName,
-            reportLink: "#"
-          }
-        ];
-        const updated = { ...p, medicalReports: newReports };
-        setCurrentProfile(updated);
-        return updated;
-      }
-      return p;
-    }));
+    setPatients((prev) =>
+      prev.map((p) => {
+        if (p.id === currentProfile?.id) {
+          const newReports = [
+            ...(p.medicalReports || []),
+            {
+              id: `rep-uuid-${Math.floor(Math.random() * 1000)}`,
+              reportName: fileName,
+              reportLink: "#",
+            },
+          ];
+          const updated = { ...p, medicalReports: newReports };
+          setCurrentProfile(updated);
+          return updated;
+        }
+        return p;
+      }),
+    );
   };
 
   const deleteMedicalReport = (reportId: string) => {
     if (activeRole !== Role.PATIENT) return;
-    setPatients(prev => prev.map(p => {
-      if (p.id === currentProfile?.id) {
-        const newReports = (p.medicalReports || []).filter(r => r.id !== reportId);
-        const updated = { ...p, medicalReports: newReports };
-        setCurrentProfile(updated);
-        return updated;
-      }
-      return p;
-    }));
+    setPatients((prev) =>
+      prev.map((p) => {
+        if (p.id === currentProfile?.id) {
+          const newReports = (p.medicalReports || []).filter(
+            (r) => r.id !== reportId,
+          );
+          const updated = { ...p, medicalReports: newReports };
+          setCurrentProfile(updated);
+          return updated;
+        }
+        return p;
+      }),
+    );
   };
 
   // ----------------------------------------------------
@@ -403,21 +363,26 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (activeRole !== Role.DOCTOR) return;
     // Mark as claimed by creating a link (simulate this by marking schedule as claimed, or mapping it)
     // For simplicity, we can let schedules hold doctor assignments
-    setSchedules(prev => prev.map(s => {
-      if (s.id === scheduleId) {
-        return { ...s, isBooked: false }; // claimed, not booked by patient yet
-      }
-      return s;
-    }));
-    
+    setSchedules((prev) =>
+      prev.map((s) => {
+        if (s.id === scheduleId) {
+          return { ...s, isBooked: false }; // claimed, not booked by patient yet
+        }
+        return s;
+      }),
+    );
+
     // Add to mock doctor schedules link
-    const exists = mockDoctorSchedules.some(ds => ds.scheduleId === scheduleId && ds.doctorId === currentProfile?.id);
+    const exists = mockDoctorSchedules.some(
+      (ds) =>
+        ds.scheduleId === scheduleId && ds.doctorId === currentProfile?.id,
+    );
     if (!exists) {
       mockDoctorSchedules.push({
         id: `doc-sched-${Math.floor(Math.random() * 1000)}`,
         doctorId: currentProfile?.id || "",
         scheduleId,
-        isBooked: false
+        isBooked: false,
       });
     }
   };
@@ -425,7 +390,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const releaseSlot = (scheduleId: string) => {
     if (activeRole !== Role.DOCTOR) return;
     // Remove claim
-    const index = mockDoctorSchedules.findIndex(ds => ds.scheduleId === scheduleId && ds.doctorId === currentProfile?.id && !ds.isBooked);
+    const index = mockDoctorSchedules.findIndex(
+      (ds) =>
+        ds.scheduleId === scheduleId &&
+        ds.doctorId === currentProfile?.id &&
+        !ds.isBooked,
+    );
     if (index !== -1) {
       mockDoctorSchedules.splice(index, 1);
     }
@@ -434,16 +404,24 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // ----------------------------------------------------
   // Appointment Booking & Payment
   // ----------------------------------------------------
-  const bookAppointment = (doctorId: string, scheduleId: string, payNow: boolean) => {
-    const selectedDoc = doctors.find(d => d.id === doctorId);
-    const selectedSched = schedules.find(s => s.id === scheduleId);
+  const bookAppointment = (
+    doctorId: string,
+    scheduleId: string,
+    payNow: boolean,
+  ) => {
+    const selectedDoc = doctors.find((d) => d.id === doctorId);
+    const selectedSched = schedules.find((s) => s.id === scheduleId);
     if (!selectedDoc || !selectedSched) return;
 
     // Mark schedule as booked
-    setSchedules(prev => prev.map(s => s.id === scheduleId ? { ...s, isBooked: true } : s));
-    
+    setSchedules((prev) =>
+      prev.map((s) => (s.id === scheduleId ? { ...s, isBooked: true } : s)),
+    );
+
     // Mark doctor schedule link as booked
-    const docSched = mockDoctorSchedules.find(ds => ds.scheduleId === scheduleId && ds.doctorId === doctorId);
+    const docSched = mockDoctorSchedules.find(
+      (ds) => ds.scheduleId === scheduleId && ds.doctorId === doctorId,
+    );
     if (docSched) docSched.isBooked = true;
 
     const newAppointment: Appointment = {
@@ -455,64 +433,82 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       doctorId,
       doctor: {
         name: selectedDoc.name,
-        appointmentFee: selectedDoc.appointmentFee
+        appointmentFee: selectedDoc.appointmentFee,
       },
       patientId: currentProfile?.id || "patient-uuid-1",
       patient: {
         name: currentProfile?.name || "John Doe",
-        email: currentProfile?.email || "johndoe@gmail.com"
+        email: currentProfile?.email || "johndoe@gmail.com",
       },
       scheduleId,
       schedule: {
         id: scheduleId,
         startDateTime: selectedSched.startDateTime,
-        endDateTime: selectedSched.endDateTime
+        endDateTime: selectedSched.endDateTime,
       },
-      payment: payNow ? {
-        id: `pay-uuid-${Math.floor(Math.random() * 1000)}`,
-        amount: selectedDoc.appointmentFee,
-        transactionId: `stripe_txn_${Math.floor(Math.random() * 1000000)}`,
-        status: PaymentStatus.PAID
-      } : undefined
+      payment: payNow
+        ? {
+            id: `pay-uuid-${Math.floor(Math.random() * 1000)}`,
+            amount: selectedDoc.appointmentFee,
+            transactionId: `stripe_txn_${Math.floor(Math.random() * 1000000)}`,
+            status: PaymentStatus.PAID,
+          }
+        : undefined,
     };
 
-    setAppointments(prev => [newAppointment, ...prev]);
+    setAppointments((prev) => [newAppointment, ...prev]);
   };
 
   const cancelAppointment = (appointmentId: string) => {
-    setAppointments(prev => prev.map(appt => {
-      if (appt.id === appointmentId) {
-        // Release schedule
-        setSchedules(sPrev => sPrev.map(s => s.id === appt.scheduleId ? { ...s, isBooked: false } : s));
-        const docSched = mockDoctorSchedules.find(ds => ds.scheduleId === appt.scheduleId && ds.doctorId === appt.doctorId);
-        if (docSched) docSched.isBooked = false;
-        
-        return { ...appt, status: AppointmentStatus.CANCELED };
-      }
-      return appt;
-    }));
+    setAppointments((prev) =>
+      prev.map((appt) => {
+        if (appt.id === appointmentId) {
+          // Release schedule
+          setSchedules((sPrev) =>
+            sPrev.map((s) =>
+              s.id === appt.scheduleId ? { ...s, isBooked: false } : s,
+            ),
+          );
+          const docSched = mockDoctorSchedules.find(
+            (ds) =>
+              ds.scheduleId === appt.scheduleId &&
+              ds.doctorId === appt.doctorId,
+          );
+          if (docSched) docSched.isBooked = false;
+
+          return { ...appt, status: AppointmentStatus.CANCELED };
+        }
+        return appt;
+      }),
+    );
   };
 
   const initiatePayment = (appointmentId: string) => {
-    setAppointments(prev => prev.map(appt => {
-      if (appt.id === appointmentId) {
-        return {
-          ...appt,
-          paymentStatus: PaymentStatus.PAID,
-          payment: {
-            id: `pay-uuid-${Math.floor(Math.random() * 1000)}`,
-            amount: appt.doctor.appointmentFee,
-            transactionId: `stripe_txn_${Math.floor(Math.random() * 1000000)}`,
-            status: PaymentStatus.PAID
-          }
-        };
-      }
-      return appt;
-    }));
+    setAppointments((prev) =>
+      prev.map((appt) => {
+        if (appt.id === appointmentId) {
+          return {
+            ...appt,
+            paymentStatus: PaymentStatus.PAID,
+            payment: {
+              id: `pay-uuid-${Math.floor(Math.random() * 1000)}`,
+              amount: appt.doctor.appointmentFee,
+              transactionId: `stripe_txn_${Math.floor(Math.random() * 1000000)}`,
+              status: PaymentStatus.PAID,
+            },
+          };
+        }
+        return appt;
+      }),
+    );
   };
 
-  const addReview = (appointmentId: string, rating: number, comment: string) => {
-    const appt = appointments.find(a => a.id === appointmentId);
+  const addReview = (
+    appointmentId: string,
+    rating: number,
+    comment: string,
+  ) => {
+    const appt = appointments.find((a) => a.id === appointmentId);
     if (!appt) return;
 
     const newReview: Review = {
@@ -523,40 +519,48 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       createdAt: new Date().toISOString(),
       patient: {
         name: appt.patient.name,
-        profilePhoto: currentProfile?.profilePhoto
+        profilePhoto: currentProfile?.profilePhoto,
       },
       doctorId: appt.doctorId,
       doctor: {
-        name: appt.doctor.name
-      }
+        name: appt.doctor.name,
+      },
     };
 
-    setReviews(prev => [newReview, ...prev]);
+    setReviews((prev) => [newReview, ...prev]);
   };
 
   // ----------------------------------------------------
   // Doctor Consultation
   // ----------------------------------------------------
   const startConsultation = (appointmentId: string) => {
-    setAppointments(prev => prev.map(appt => {
-      if (appt.id === appointmentId) {
-        return { ...appt, status: AppointmentStatus.INPROGRESS };
-      }
-      return appt;
-    }));
+    setAppointments((prev) =>
+      prev.map((appt) => {
+        if (appt.id === appointmentId) {
+          return { ...appt, status: AppointmentStatus.INPROGRESS };
+        }
+        return appt;
+      }),
+    );
   };
 
   const completeAppointment = (appointmentId: string) => {
-    setAppointments(prev => prev.map(appt => {
-      if (appt.id === appointmentId) {
-        return { ...appt, status: AppointmentStatus.COMPLETED };
-      }
-      return appt;
-    }));
+    setAppointments((prev) =>
+      prev.map((appt) => {
+        if (appt.id === appointmentId) {
+          return { ...appt, status: AppointmentStatus.COMPLETED };
+        }
+        return appt;
+      }),
+    );
   };
 
-  const writePrescription = (appointmentId: string, instructions: string, followUpDate: string) => {
-    const appt = appointments.find(a => a.id === appointmentId);
+  const writePrescription = (
+    appointmentId: string,
+    instructions: string,
+    followUpDate: string,
+  ) => {
+    const appt = appointments.find((a) => a.id === appointmentId);
     if (!appt) return;
 
     const newPrescription: Prescription = {
@@ -566,15 +570,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       followUpDate,
       createdAt: new Date().toISOString(),
       doctor: {
-        name: appt.doctor.name
+        name: appt.doctor.name,
       },
       patient: {
-        name: appt.patient.name
+        name: appt.patient.name,
       },
-      pdfUrl: "#"
+      pdfUrl: "#",
     };
 
-    setPrescriptions(prev => [newPrescription, ...prev]);
+    setPrescriptions((prev) => [newPrescription, ...prev]);
     // Also mark appointment completed
     completeAppointment(appointmentId);
   };
@@ -588,16 +592,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       title,
       description,
       icon: icon || "https://img.icons8.com/color/96/health.png",
-      isDeleted: false
+      isDeleted: false,
     };
-    setSpecialties(prev => [...prev, newSpecialty]);
+    setSpecialties((prev) => [...prev, newSpecialty]);
   };
 
   const deleteSpecialty = (specialtyId: string) => {
-    setSpecialties(prev => prev.filter(s => s.id !== specialtyId));
+    setSpecialties((prev) => prev.filter((s) => s.id !== specialtyId));
   };
 
-  const generateSchedules = (startDate: string, endDate: string, startTime: string, endTime: string) => {
+  const generateSchedules = (
+    startDate: string,
+    endDate: string,
+    startTime: string,
+    endTime: string,
+  ) => {
     // Generates 30-min schedule blocks daily
     const startD = new Date(startDate);
     const endD = new Date(endDate);
@@ -621,16 +630,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           id: `sched-uuid-${Math.floor(Math.random() * 100000)}`,
           startDateTime: slotTime.toISOString(),
           endDateTime: nextTime.toISOString(),
-          isBooked: false
+          isBooked: false,
         });
         slotTime = nextTime;
       }
     }
 
-    setSchedules(prev => [...prev, ...generated]);
+    setSchedules((prev) => [...prev, ...generated]);
   };
 
-  const registerDoctor = (doctor: Omit<Doctor, "id" | "averageRating" | "isDeleted" | "specialties">, specialtyIds: string[]) => {
+  const registerDoctor = (
+    doctor: Omit<Doctor, "id" | "averageRating" | "isDeleted" | "specialties">,
+    specialtyIds: string[],
+  ) => {
     const newDocId = `doc-uuid-${Math.floor(Math.random() * 1000)}`;
     const newDoc: Doctor = {
       ...doctor,
@@ -640,12 +652,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       specialties: specialtyIds.map((sid, idx) => ({
         id: `ds-dyn-${idx}-${Math.floor(Math.random() * 100)}`,
         specialtyId: sid,
-        specialty: specialties.find(s => s.id === sid) || specialties[0]
-      }))
+        specialty: specialties.find((s) => s.id === sid) || specialties[0],
+      })),
     };
 
-    setDoctors(prev => [...prev, newDoc]);
-    
+    setDoctors((prev) => [...prev, newDoc]);
+
     // Add User account
     const newDocUser = {
       id: `user-doc-${Math.floor(Math.random() * 1000)}`,
@@ -654,47 +666,64 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       status: UserStatus.ACTIVE,
       needsPasswordChange: false,
       createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
+      updatedAt: new Date().toISOString(),
     };
-    setUsers(prev => [...prev, newDocUser]);
+    setUsers((prev) => [...prev, newDocUser]);
   };
 
   const updateDoctor = (id: string, updatedFields: Partial<Doctor>) => {
-    setDoctors(prev => prev.map(d => d.id === id ? { ...d, ...updatedFields } : d));
+    setDoctors((prev) =>
+      prev.map((d) => (d.id === id ? { ...d, ...updatedFields } : d)),
+    );
   };
 
   const deleteDoctor = (id: string) => {
-    setDoctors(prev => prev.map(d => d.id === id ? { ...d, isDeleted: true } : d));
+    setDoctors((prev) =>
+      prev.map((d) => (d.id === id ? { ...d, isDeleted: true } : d)),
+    );
   };
 
   const changeUserStatus = (userId: string, status: UserStatus) => {
-    setUsers(prev => prev.map(u => u.id === userId ? { ...u, status } : u));
-    
+    setUsers((prev) =>
+      prev.map((u) => (u.id === userId ? { ...u, status } : u)),
+    );
+
     // If the blocked user is current, force logout
-    if (currentUser && users.find(u => u.id === userId)?.email === currentUser.email && status === UserStatus.BLOCKED) {
+    if (
+      currentUser &&
+      users.find((u) => u.id === userId)?.email === currentUser.email &&
+      status === UserStatus.BLOCKED
+    ) {
       logout();
     }
   };
 
   const changeUserRole = (userId: string, role: Role) => {
-    setUsers(prev => prev.map(u => u.id === userId ? { ...u, role } : u));
+    setUsers((prev) => prev.map((u) => (u.id === userId ? { ...u, role } : u)));
   };
 
   const updateAppointmentStatus = (id: string, status: AppointmentStatus) => {
-    setAppointments(prev => prev.map(appt => appt.id === id ? { ...appt, status } : appt));
+    setAppointments((prev) =>
+      prev.map((appt) => (appt.id === id ? { ...appt, status } : appt)),
+    );
   };
 
   // ----------------------------------------------------
   // Super Admin Operations
   // ----------------------------------------------------
-  const createAdmin = (name: string, email: string, contactNumber: string, role: Role) => {
+  const createAdmin = (
+    name: string,
+    email: string,
+    contactNumber: string,
+    role: Role,
+  ) => {
     const newAdmin: Admin = {
       id: `admin-uuid-${Math.floor(Math.random() * 1000)}`,
       name,
       email,
-      contactNumber
+      contactNumber,
     };
-    setAdmins(prev => [...prev, newAdmin]);
+    setAdmins((prev) => [...prev, newAdmin]);
 
     // Create User record
     const newAdminUser = {
@@ -704,60 +733,60 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       status: UserStatus.ACTIVE,
       needsPasswordChange: false,
       createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
+      updatedAt: new Date().toISOString(),
     };
-    setUsers(prev => [...prev, newAdminUser]);
+    setUsers((prev) => [...prev, newAdminUser]);
   };
 
   const deleteAdmin = (adminId: string) => {
-    setAdmins(prev => prev.filter(a => a.id !== adminId));
+    setAdmins((prev) => prev.filter((a) => a.id !== adminId));
   };
 
   return (
-    <AuthContext.Provider value={{
-      currentUser,
-      activeRole,
-      currentProfile,
-      users,
-      doctors,
-      patients,
-      appointments,
-      specialties,
-      schedules,
-      prescriptions,
-      reviews,
-      admins,
-      needsPasswordChange,
-      login,
-      register,
-      logout,
-      changePassword,
-      switchRole,
-      updatePatientProfile,
-      uploadMedicalReport,
-      deleteMedicalReport,
-      claimSlot,
-      releaseSlot,
-      bookAppointment,
-      cancelAppointment,
-      initiatePayment,
-      addReview,
-      startConsultation,
-      completeAppointment,
-      writePrescription,
-      addSpecialty,
-      deleteSpecialty,
-      generateSchedules,
-      registerDoctor,
-      updateDoctor,
-      deleteDoctor,
-      changeUserStatus,
-      changeUserRole,
-      updateAppointmentStatus,
-      createAdmin,
-      deleteAdmin,
-      setRealSession
-    }}>
+    <AuthContext.Provider
+      value={{
+        currentUser,
+        activeRole,
+        currentProfile,
+        users,
+        doctors,
+        patients,
+        appointments,
+        specialties,
+        schedules,
+        prescriptions,
+        reviews,
+        admins,
+        needsPasswordChange,
+        logout,
+        changePassword,
+        switchRole,
+        updatePatientProfile,
+        uploadMedicalReport,
+        deleteMedicalReport,
+        claimSlot,
+        releaseSlot,
+        bookAppointment,
+        cancelAppointment,
+        initiatePayment,
+        addReview,
+        startConsultation,
+        completeAppointment,
+        writePrescription,
+        addSpecialty,
+        deleteSpecialty,
+        generateSchedules,
+        registerDoctor,
+        updateDoctor,
+        deleteDoctor,
+        changeUserStatus,
+        changeUserRole,
+        updateAppointmentStatus,
+        createAdmin,
+        deleteAdmin,
+        setRealSession,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );
