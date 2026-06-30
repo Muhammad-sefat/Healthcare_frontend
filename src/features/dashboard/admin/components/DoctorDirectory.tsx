@@ -1,23 +1,25 @@
 "use client";
 
 import React, { useState } from "react";
-import { Doctor, Specialty, Gender } from "@/types";
+import { Doctor, Gender } from "@/types";
 import { Plus, Trash2 } from "lucide-react";
 import { CustomModal } from "@/components/ui/custom-modal";
+import { useAdminSpecialties } from "../hooks/useSpecialtyMutations";
 
 interface DoctorDirectoryProps {
   doctors: Doctor[];
-  specialties: Specialty[];
   registerDoctor: (doctor: any, specs: string[]) => void;
   deleteDoctor: (id: string) => void;
 }
 
 export function DoctorDirectory({
   doctors,
-  specialties,
   registerDoctor,
   deleteDoctor,
 }: DoctorDirectoryProps) {
+  const { data: specialtiesResponse } = useAdminSpecialties();
+  const specialties = specialtiesResponse?.data || [];
+
   const [doctorModalOpen, setDoctorModalOpen] = useState(false);
   const [doctorName, setDoctorName] = useState("");
   const [doctorEmail, setDoctorEmail] = useState("");

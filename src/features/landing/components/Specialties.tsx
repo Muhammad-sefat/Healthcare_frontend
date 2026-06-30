@@ -29,7 +29,7 @@ export function Specialties() {
                 <div className="h-3 w-16 bg-slate-100 dark:bg-slate-800 rounded-md" />
               </div>
             ))
-          ) : (
+          ) : specialtiesData.length > 0 ? (
             specialtiesData.map((spec) => (
               <Link
                 key={spec.id}
@@ -47,6 +47,10 @@ export function Specialties() {
                 </span>
               </Link>
             ))
+          ) : (
+            <div className="col-span-full text-center py-10 bg-white dark:bg-slate-900 border border-dashed border-slate-200 dark:border-slate-800 rounded-3xl text-slate-450 dark:text-slate-500 text-xs font-semibold">
+              No specialties available at the moment.
+            </div>
           )}
         </div>
       </div>

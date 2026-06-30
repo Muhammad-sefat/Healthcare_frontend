@@ -3,7 +3,6 @@
 import React, { useState, useMemo } from "react";
 import { 
   Doctor, 
-  Specialty, 
   Schedule 
 } from "@/types";
 import { 
@@ -17,20 +16,21 @@ import {
 } from "lucide-react";
 import { mockDoctorSchedules } from "../data/mockPatientData";
 import { CustomModal } from "@/components/ui/custom-modal";
+import { useSpecialties } from "@/features/landing/hooks/useSpecialties";
 
 interface BookConsultationProps {
   doctors: Doctor[];
-  specialties: Specialty[];
   schedules: Schedule[];
   bookAppointment: (doctorId: string, scheduleId: string, payNow: boolean) => void;
 }
 
 export function BookConsultation({
   doctors,
-  specialties,
   schedules,
   bookAppointment,
 }: BookConsultationProps) {
+  const { data: specialtiesResponse } = useSpecialties();
+  const specialties = specialtiesResponse?.data || [];
   // Booking Tab Local States
   const [bookSearch, setBookSearch] = useState("");
   const [bookSpec, setBookSpec] = useState("");

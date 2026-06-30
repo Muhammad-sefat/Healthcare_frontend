@@ -108,24 +108,30 @@ export function HeroSection() {
                         >
                           Select Specialty
                         </button>
-                        {specialtiesData?.map(spec => (
-                          <button
-                            key={spec.id}
-                            type="button"
-                            onClick={() => {
-                              setSelectedSpecialty(spec.id);
-                              setDropdownOpen(false);
-                            }}
-                            className={`w-full text-left px-4 py-2.5 text-sm transition-colors hover:bg-slate-50 dark:hover:bg-slate-800 flex items-center gap-2 ${
-                              selectedSpecialty === spec.id
-                                ? "text-primary font-bold bg-primary/5 dark:bg-primary/10"
-                                : "text-slate-700 dark:text-slate-350"
-                            }`}
-                          >
-                            <img src={spec.icon} alt={spec.title} className="h-4.5 w-4.5 object-contain opacity-75 animate-none" />
-                            {spec.title}
-                          </button>
-                        ))}
+                        {specialtiesData && specialtiesData.length > 0 ? (
+                          specialtiesData.map(spec => (
+                            <button
+                              key={spec.id}
+                              type="button"
+                              onClick={() => {
+                                setSelectedSpecialty(spec.id);
+                                setDropdownOpen(false);
+                              }}
+                              className={`w-full text-left px-4 py-2.5 text-sm transition-colors hover:bg-slate-50 dark:hover:bg-slate-800 flex items-center gap-2 ${
+                                selectedSpecialty === spec.id
+                                  ? "text-primary font-bold bg-primary/5 dark:bg-primary/10"
+                                  : "text-slate-700 dark:text-slate-350"
+                              }`}
+                            >
+                              <img src={spec.icon} alt={spec.title} className="h-4.5 w-4.5 object-contain opacity-75 animate-none" />
+                              {spec.title}
+                            </button>
+                          ))
+                        ) : (
+                          <div className="px-4 py-2 text-xs text-slate-400 italic text-center">
+                            No specialties available
+                          </div>
+                        )}
                       </div>
                     </>
                   )}

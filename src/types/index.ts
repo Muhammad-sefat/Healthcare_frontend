@@ -54,7 +54,8 @@ export interface Specialty {
   id: string;
   title: string;
   description: string;
-  icon: string;
+  icon?: string;
+  image?: string;
   isDeleted: boolean;
 }
 
@@ -66,6 +67,7 @@ export interface DoctorSpecialty {
 
 export interface Doctor {
   id: string;
+  userId?: string;
   name: string;
   email: string;
   profilePhoto?: string;
@@ -111,6 +113,7 @@ export interface MedicalReport {
 
 export interface Patient {
   id: string;
+  userId?: string;
   name: string;
   email: string;
   profilePhoto?: string;
@@ -202,6 +205,7 @@ export interface Review {
 
 export interface Admin {
   id: string;
+  userId?: string;
   name: string;
   email: string;
   profilePhoto?: string;

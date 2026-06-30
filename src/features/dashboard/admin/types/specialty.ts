@@ -15,3 +15,9 @@ export interface SpecialtiesResponse {
   message: string;
   data: Specialty[];
 }
+
+export interface SpecialtyResponse {
+  success: boolean;
+  message: string;
+  data: Specialty;
+}
