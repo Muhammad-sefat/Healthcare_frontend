@@ -108,17 +108,17 @@ export function DashboardSidebar({
           tab: "admin-specialties",
         },
         {
+          label: "Doctors",
+          icon: <UserPlus className="h-5 w-5" />,
+          tab: "admin-doctors",
+        },
+        {
           label: "Generate Schedules",
           icon: <Clock className="h-5 w-5" />,
           tab: "admin-schedules",
         },
         {
-          label: "Doctor Directory CRUD",
-          icon: <UserPlus className="h-5 w-5" />,
-          tab: "admin-doctors",
-        },
-        {
-          label: "User Moderation",
+          label: "Users Moderation",
           icon: <Users className="h-5 w-5" />,
           tab: "admin-users",
         },
@@ -321,9 +321,13 @@ function SidebarNav({ menuLinks, handleTabClick }: SidebarNavProps) {
   return (
     <nav className="flex-1 px-4 py-6 space-y-1.5 overflow-y-auto">
       {menuLinks.map((link, idx) => {
-        const isActive = link.tab === "overview"
-          ? pathname.endsWith("/patient") || pathname.endsWith("/doctor") || pathname.endsWith("/admin") || pathname.endsWith("/super-admin")
-          : pathname.endsWith(`/${link.tab}`);
+        const isActive =
+          link.tab === "overview"
+            ? pathname.endsWith("/patient") ||
+              pathname.endsWith("/doctor") ||
+              pathname.endsWith("/admin") ||
+              pathname.endsWith("/super-admin")
+            : pathname.endsWith(`/${link.tab}`);
         return (
           <button
             key={idx}

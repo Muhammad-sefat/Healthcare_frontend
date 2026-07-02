@@ -4,25 +4,25 @@ import { Search, UserCheck, Video, FileText } from "lucide-react";
 export function HowItWorks() {
   const steps = [
     {
-      icon: <Search className="h-6 w-6 text-primary" />,
+      icon: <Search className="h-6 w-6" />,
       title: "Find a Doctor",
-      desc: "Search by specialty, location, or name to find the right medical provider."
+      desc: "Search by specialty, location, or name to find the right medical provider.",
     },
     {
-      icon: <UserCheck className="h-6 w-6 text-primary" />,
+      icon: <UserCheck className="h-6 w-6" />,
       title: "Book Appointment",
-      desc: "Select a convenient time slot from the doctor's claimed availability calendar."
+      desc: "Select a convenient time slot from the doctor's claimed availability calendar.",
     },
     {
-      icon: <Video className="h-6 w-6 text-primary" />,
+      icon: <Video className="h-6 w-6" />,
       title: "Video Consultation",
-      desc: "Conduct safe, high-definition online video sessions from your dashboard."
+      desc: "Conduct safe, high-definition online video sessions from your dashboard.",
     },
     {
-      icon: <FileText className="h-6 w-6 text-primary" />,
+      icon: <FileText className="h-6 w-6" />,
       title: "Get Prescription",
-      desc: "Receive digital clinical guidelines, prescriptions, and pdf downloads instantly."
-    }
+      desc: "Receive digital clinical guidelines, prescriptions, and pdf downloads instantly.",
+    },
   ];
 
   return (
@@ -33,14 +33,15 @@ export function HowItWorks() {
             How CarePulse Works
           </h2>
           <p className="text-slate-600 dark:text-slate-400">
-            Four easy steps to connect with trusted clinical assistance. Our flow ensures rapid feedback and complete medical audit.
+            Four easy steps to connect with trusted clinical assistance. Our
+            flow ensures rapid feedback and complete medical audit.
           </p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8 relative">
           {steps.map((step, index) => (
             <div key={index} className="relative group text-center space-y-4">
-              <div className="mx-auto h-14 w-14 bg-primary/5 rounded-2xl flex items-center justify-center shadow-xs border border-primary/10 group-hover:bg-primary group-hover:text-white group-hover:scale-105 transition-all duration-300">
+              <div className="mx-auto h-14 w-14 bg-primary/5 rounded-2xl flex items-center justify-center shadow-xs border border-primary/10 text-primary group-hover:bg-primary group-hover:text-white group-hover:scale-105 transition-all duration-300">
                 {step.icon}
               </div>
               <h3 className="text-lg font-bold text-slate-900 dark:text-white">

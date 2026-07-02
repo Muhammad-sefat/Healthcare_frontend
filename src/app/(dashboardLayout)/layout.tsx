@@ -13,16 +13,21 @@ export default function DashboardLayout({
 }) {
   const router = useRouter();
   const { currentUser, activeRole } = useAuth();
+  const [mounted, setMounted] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  React.useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // If not logged in, redirect to login
   React.useEffect(() => {
-    if (!currentUser) {
+    if (mounted && !currentUser) {
       router.push("/login");
     }
-  }, [currentUser, router]);
+  }, [currentUser, router, mounted]);
 
-  if (!currentUser || !activeRole) {
+  if (!mounted || !currentUser || !activeRole) {
     return (
       <div className="min-h-screen bg-slate-50 flex items-center justify-center">
         <div className="h-8 w-8 border-4 border-primary/20 border-t-primary rounded-full animate-spin" />
@@ -33,7 +38,10 @@ export default function DashboardLayout({
   return (
     <div className="flex h-screen bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-200 overflow-hidden font-sans">
       {/* Sidebar Navigation (Desktop & Mobile) */}
-      <DashboardSidebar sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
+      <DashboardSidebar
+        sidebarOpen={sidebarOpen}
+        setSidebarOpen={setSidebarOpen}
+      />
 
       {/* Main Content Wrapper */}
       <div className="flex-1 flex flex-col overflow-hidden">
@@ -41,7 +49,7 @@ export default function DashboardLayout({
         <DashboardNavbar setSidebarOpen={setSidebarOpen} />
 
         {/* Content Body Pane */}
-        <main className="grow overflow-y-auto p-4 sm:p-8">{children}</main>
+        <main className="grow overflow-y-auto p-4">{children}</main>
       </div>
     </div>
   );
