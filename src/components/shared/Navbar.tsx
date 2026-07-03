@@ -42,9 +42,6 @@ export default function Navbar() {
 
   const navLinks = [
     { name: "Find Doctors", href: "/doctors" },
-    { name: "Diagnostics", href: "/diagnostics" },
-    { name: "Medicine", href: "/medicine" },
-    { name: "Health Plans", href: "/health-plans" },
     { name: "About Us", href: "/about" },
     { name: "Contact", href: "/contact" },
   ];

@@ -4,6 +4,8 @@ import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useAuth } from "@/providers/authProvider";
+import { useGetDoctors } from "@/hooks/useGetDoctors";
+import { useSpecialties } from "@/features/landing/hooks/useSpecialties";
 import { 
   Search, 
   SlidersHorizontal, 
@@ -27,7 +29,10 @@ import {
   PopoverContent,
 } from "@/components/ui/popover";
 export function DoctorsListView() {
-  const { doctors, specialties } = useAuth();
+  const { data: doctorsResponse, isLoading } = useGetDoctors();
+  const { data: specialtiesResponse } = useSpecialties();
+  const doctors = doctorsResponse?.data || [];
+  const specialties = specialtiesResponse?.data || [];
   const searchParams = useSearchParams();
 
   // Search & Filter state
@@ -229,102 +234,124 @@ export function DoctorsListView() {
             </div>
 
             {/* Active Filters Summary */}
-            <div className="flex flex-wrap items-center justify-between gap-4 text-xs text-slate-500 px-2">
+            <div className="flex flex-wrap items-center justify-between gap-4 text-xs text-slate-505 px-2">
               <div>
-                Showing <span className="font-bold text-slate-800 dark:text-slate-200">{filteredDoctors.length}</span> doctors available
+                Showing <span className="font-bold text-slate-800 dark:text-slate-200">{isLoading ? 0 : filteredDoctors.length}</span> doctors available
               </div>
             </div>
 
             {/* Doctors Grid */}
-            {filteredDoctors.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-fadeIn">
-                  {filteredDoctors.map((doc) => (
-                    <div
-                      key={doc.id}
-                      className="bg-white dark:bg-slate-900 border border-slate-150 dark:border-slate-800 rounded-3xl p-6 shadow-xs hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 flex flex-col h-full"
-                    >
-                      {/* Doctor Profile Header */}
-                      <div className="flex gap-4 items-start pb-4 border-b border-slate-100 dark:border-slate-800">
-                        <img
-                          src={doc.profilePhoto}
-                          alt={doc.name}
-                          className="h-16 w-16 rounded-2xl object-cover border border-slate-100 dark:border-slate-700 flex-shrink-0"
-                        />
-                        <div className="space-y-1">
-                          <h3 className="font-bold text-slate-955 dark:text-white text-base hover:text-primary">
-                            <Link href={`/doctors/${doc.id}`}>{doc.name}</Link>
-                          </h3>
-                          <p className="text-xs text-slate-505 font-medium">{doc.designation}</p>
-                          <span className="inline-block bg-primary/10 text-primary text-[10px] font-semibold px-2 py-0.5 rounded-md">
-                            {doc.specialties[0]?.specialty?.title}
-                          </span>
-                        </div>
+            {isLoading ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-pulse">
+                {Array.from({ length: 6 }).map((_, index) => (
+                  <div key={index} className="bg-white dark:bg-slate-900 border border-slate-150 dark:border-slate-800 rounded-3xl p-6 space-y-4 flex flex-col h-full">
+                    <div className="flex gap-4 items-start pb-4 border-b border-slate-100 dark:border-slate-800">
+                      <div className="h-16 w-16 bg-slate-100 dark:bg-slate-800 rounded-2xl flex-shrink-0" />
+                      <div className="space-y-2 flex-1">
+                        <div className="h-4 bg-slate-100 dark:bg-slate-800 rounded-md w-3/4" />
+                        <div className="h-3 bg-slate-100 dark:bg-slate-800 rounded-md w-1/2" />
+                        <div className="h-3.5 bg-slate-100 dark:bg-slate-800 rounded-md w-1/3" />
                       </div>
-
-                      {/* Credentials */}
-                      <div className="py-4 space-y-2 text-xs text-slate-500 flex-1">
-                        <div className="flex items-center gap-2">
-                          <GraduationCap className="h-4 w-4 text-slate-400 flex-shrink-0" />
-                          <span className="line-clamp-1">{doc.qualification}</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <MapPin className="h-4 w-4 text-slate-400 flex-shrink-0" />
-                          <span className="line-clamp-1">{doc.currentWorkplace}</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <Clock className="h-4 w-4 text-slate-400 flex-shrink-0" />
-                          <span>{doc.experience} Years Experience</span>
-                        </div>
-                      </div>
-
-                      {/* Ratings and Fees Card */}
-                      <div className="bg-slate-50 dark:bg-slate-900/50 rounded-2xl p-4 flex items-center justify-between mb-4">
-                        <div>
-                          <span className="block text-[9px] text-slate-400 uppercase tracking-wider font-semibold">Consultation Fee</span>
-                          <span className="text-base font-bold text-primary">৳{doc.appointmentFee}</span>
-                        </div>
-                        <div className="text-right">
-                          <span className="block text-[9px] text-slate-400 uppercase tracking-wider font-semibold">Average Rating</span>
-                          <span className="text-sm font-bold text-amber-500 flex items-center justify-end gap-1">
-                            <Star className="h-4 w-4 fill-amber-500" />
-                            {doc.averageRating}
-                          </span>
-                        </div>
-                      </div>
-
-                      {/* Book CTA */}
-                      <Link
-                        href={`/doctors/${doc.id}`}
-                        className="w-full bg-primary hover:bg-primary/95 text-white py-3 rounded-xl text-xs font-bold shadow-md shadow-primary/15 hover:shadow-lg transition-all text-center flex items-center justify-center gap-2 cursor-pointer"
-                      >
-                        Book Appointment
-                        <ArrowRight className="h-3.5 w-3.5" />
-                      </Link>
                     </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="bg-white dark:bg-slate-900 rounded-3xl p-16 text-center border border-slate-150 dark:border-slate-800 space-y-4">
-                  <div className="bg-slate-50 dark:bg-slate-800 p-4 rounded-full inline-block">
-                    <Filter className="h-8 w-8 text-slate-400" />
+                    <div className="py-4 space-y-2 flex-1">
+                      <div className="h-3 bg-slate-100 dark:bg-slate-800 rounded-md" />
+                      <div className="h-3 bg-slate-100 dark:bg-slate-800 rounded-md w-5/6" />
+                      <div className="h-3 bg-slate-100 dark:bg-slate-800 rounded-md w-2/3" />
+                    </div>
+                    <div className="h-14 bg-slate-50 dark:bg-slate-900/50 rounded-2xl mb-4" />
+                    <div className="h-10 bg-slate-100 dark:bg-slate-800 rounded-xl" />
                   </div>
-                  <h3 className="text-lg font-bold text-slate-900 dark:text-white">No Doctors Found</h3>
-                  <p className="text-xs text-slate-455 max-w-sm mx-auto">
-                    {"We couldn't find any doctor matching your current filters. Try relaxing your fee restrictions or clearing your search term."}
-                  </p>
-                  <button
-                    onClick={() => {
-                      setSearchTerm("");
-                      setSelectedSpecialty("");
-                      setMaxFee(2000);
-                      setSortBy("rating");
-                    }}
-                    className="bg-primary text-white hover:bg-primary/95 px-6 py-2.5 rounded-xl text-xs font-bold transition-all shadow-md cursor-pointer"
+                ))}
+              </div>
+            ) : filteredDoctors.length > 0 ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-fadeIn">
+                {filteredDoctors.map((doc) => (
+                  <div
+                    key={doc.id}
+                    className="bg-white dark:bg-slate-900 border border-slate-150 dark:border-slate-800 rounded-3xl p-6 shadow-xs hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 flex flex-col h-full"
                   >
-                    Clear All Filters
-                  </button>
+                    {/* Doctor Profile Header */}
+                    <div className="flex gap-4 items-start pb-4 border-b border-slate-100 dark:border-slate-800">
+                      <img
+                        src={doc.profilePhoto || "https://img.icons8.com/color/96/doctor-male.png"}
+                        alt={doc.name}
+                        className="h-16 w-16 rounded-2xl object-cover border border-slate-100 dark:border-slate-700 flex-shrink-0"
+                      />
+                      <div className="space-y-1">
+                        <h3 className="font-bold text-slate-955 dark:text-white text-base hover:text-primary">
+                          <Link href={`/doctors/${doc.id}`}>{doc.name}</Link>
+                        </h3>
+                        <p className="text-xs text-slate-505 font-medium">{doc.designation}</p>
+                        <span className="inline-block bg-primary/10 text-primary text-[10px] font-semibold px-2 py-0.5 rounded-md">
+                          {doc.specialties[0]?.specialty?.title || "General"}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Credentials */}
+                    <div className="py-4 space-y-2 text-xs text-slate-500 flex-1">
+                      <div className="flex items-center gap-2">
+                        <GraduationCap className="h-4 w-4 text-slate-400 flex-shrink-0" />
+                        <span className="line-clamp-1">{doc.qualification}</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <MapPin className="h-4 w-4 text-slate-400 flex-shrink-0" />
+                        <span className="line-clamp-1">{doc.currentWorkplace}</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Clock className="h-4 w-4 text-slate-400 flex-shrink-0" />
+                        <span>{doc.experience} Years Experience</span>
+                      </div>
+                    </div>
+
+                    {/* Ratings and Fees Card */}
+                    <div className="bg-slate-50 dark:bg-slate-900/50 rounded-2xl p-4 flex items-center justify-between mb-4">
+                      <div>
+                        <span className="block text-[9px] text-slate-400 uppercase tracking-wider font-semibold">Consultation Fee</span>
+                        <span className="text-base font-bold text-primary">৳{doc.appointmentFee}</span>
+                      </div>
+                      <div className="text-right">
+                        <span className="block text-[9px] text-slate-400 uppercase tracking-wider font-semibold">Average Rating</span>
+                        <span className="text-sm font-bold text-amber-500 flex items-center justify-end gap-1">
+                          <Star className="h-4 w-4 fill-amber-500" />
+                          {doc.averageRating}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Book CTA */}
+                    <Link
+                      href={`/doctors/${doc.id}`}
+                      className="w-full bg-primary hover:bg-primary/95 text-white py-3 rounded-xl text-xs font-bold shadow-md shadow-primary/15 hover:shadow-lg transition-all text-center flex items-center justify-center gap-2 cursor-pointer"
+                    >
+                      Book Appointment
+                      <ArrowRight className="h-3.5 w-3.5" />
+                    </Link>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="bg-white dark:bg-slate-900 rounded-3xl p-16 text-center border border-slate-150 dark:border-slate-800 space-y-4">
+                <div className="bg-slate-50 dark:bg-slate-800 p-4 rounded-full inline-block">
+                  <Filter className="h-8 w-8 text-slate-400" />
                 </div>
-              )}
+                <h3 className="text-lg font-bold text-slate-900 dark:text-white">No Doctors Found</h3>
+                <p className="text-xs text-slate-455 max-w-sm mx-auto">
+                  {"We couldn't find any doctor matching your current filters. Try relaxing your fee restrictions or clearing your search term."}
+                </p>
+                <button
+                  onClick={() => {
+                    setSearchTerm("");
+                    setSelectedSpecialty("");
+                    setMaxFee(2000);
+                    setSortBy("rating");
+                  }}
+                  className="bg-primary text-white hover:bg-primary/95 px-6 py-2.5 rounded-xl text-xs font-bold transition-all shadow-md cursor-pointer"
+                >
+                  Clear All Filters
+                </button>
+              </div>
+            )}
             </div>
           </div>
         </div>
