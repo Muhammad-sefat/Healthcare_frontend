@@ -28,6 +28,8 @@ export function DatePicker({
   className,
   disabled,
 }: DatePickerProps) {
+  const [open, setOpen] = React.useState(false);
+
   const dateValue = React.useMemo(() => {
     if (!value) return undefined;
     const d = new Date(value);
@@ -40,11 +42,12 @@ export function DatePicker({
       const month = String(selectedDate.getMonth() + 1).padStart(2, "0");
       const day = String(selectedDate.getDate()).padStart(2, "0");
       onChange(`${year}-${month}-${day}`);
+      setOpen(false);
     }
   };
 
   return (
-    <Popover>
+    <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
         <Button
           type="button"

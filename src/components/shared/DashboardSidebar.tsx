@@ -113,7 +113,7 @@ export function DashboardSidebar({
           tab: "admin-doctors",
         },
         {
-          label: "Generate Schedules",
+          label: "Manage Schedules",
           icon: <Clock className="h-5 w-5" />,
           tab: "admin-schedules",
         },
