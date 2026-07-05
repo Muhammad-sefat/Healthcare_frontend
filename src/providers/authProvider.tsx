@@ -129,49 +129,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   const [reviews, setReviews] = useState<Review[]>(mockReviews);
   const [admins, setAdmins] = useState<Admin[]>(mockAdmins);
 
-  // Authentication status - initialized instantly from localStorage to avoid flickering/vanishing on page reload
-  const [currentUser, setCurrentUser] = useState<User | null>(() => {
-    if (typeof window !== "undefined") {
-      const userStr = localStorage.getItem("user");
-      return userStr ? JSON.parse(userStr) : null;
-    }
-    return null;
-  });
-  const [activeRole, setActiveRole] = useState<Role | null>(() => {
-    if (typeof window !== "undefined") {
-      const userStr = localStorage.getItem("user");
-      if (userStr) {
-        try {
-          return JSON.parse(userStr).role as Role;
-        } catch {
-          return null;
-        }
-      }
-    }
-    return null;
-  });
+  // Authentication status - initialized to null/false to avoid hydration mismatches, then restored on client mount
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const [activeRole, setActiveRole] = useState<Role | null>(null);
   const [currentProfile, setCurrentProfile] = useState<
     Patient | Doctor | Admin | null
-  >(() => {
-    if (typeof window !== "undefined") {
-      const profileStr = localStorage.getItem("profile");
-      return profileStr ? JSON.parse(profileStr) : null;
-    }
-    return null;
-  });
-  const [needsPasswordChange, setNeedsPasswordChange] = useState(() => {
-    if (typeof window !== "undefined") {
-      const userStr = localStorage.getItem("user");
-      if (userStr) {
-        try {
-          return JSON.parse(userStr).needsPasswordChange || false;
-        } catch {
-          return false;
-        }
-      }
-    }
-    return false;
-  });
+  >(null);
+  const [needsPasswordChange, setNeedsPasswordChange] = useState(false);
 
   // Keep state in sync with localStorage and verify credentials with backend in the background
   useEffect(() => {
@@ -193,6 +157,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
           setCurrentUser(user);
           setActiveRole(user.role);
           setCurrentProfile(profile);
+          setNeedsPasswordChange(user.needsPasswordChange || false);
         } catch (e) {
           console.error("Error parsing stored session:", e);
         }

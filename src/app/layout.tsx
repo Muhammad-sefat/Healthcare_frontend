@@ -33,7 +33,7 @@ export default function RootLayout({
       className={`${plusJakartaSans.variable} ${geistMono.variable} h-full antialiased`}
       suppressHydrationWarning
     >
-      <body className="min-h-full flex flex-col font-sans">
+      <body suppressHydrationWarning className="min-h-full flex flex-col font-sans">
         <ReduxProvider>
           <AuthProvider>
             <ReactQueryProvider>{children}</ReactQueryProvider>

@@ -77,7 +77,7 @@ export function DashboardSidebar({
       return [
         ...common,
         {
-          label: "Manage Claimed Slots",
+          label: "Manage Slots",
           icon: <Clock className="h-5 w-5" />,
           tab: "slots",
         },

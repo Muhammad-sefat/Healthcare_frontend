@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { api } from "@/lib/axios";
 
 export interface BookingPayload {
@@ -11,16 +12,23 @@ export interface BookingResponse {
   data: {
     appointment?: any;
     payment?: any;
-    paymentUrl?: string; // only for Pay Now
+    paymentUrl?: string;
   };
 }
 
-export const bookAppointmentNow = async (payload: BookingPayload): Promise<BookingResponse> => {
-  const response = await api.post("/appointment/book-appointment", payload);
+export const bookAppointmentNow = async (
+  payload: BookingPayload,
+): Promise<BookingResponse> => {
+  const response = await api.post("/appointments/book-appointment", payload);
   return response.data;
 };
 
-export const bookAppointmentLater = async (payload: BookingPayload): Promise<BookingResponse> => {
-  const response = await api.post("/appointment/book-appointment-with-pay-later", payload);
+export const bookAppointmentLater = async (
+  payload: BookingPayload,
+): Promise<BookingResponse> => {
+  const response = await api.post(
+    "/appointment/book-appointment-with-pay-later",
+    payload,
+  );
   return response.data;
 };
